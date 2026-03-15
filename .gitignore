@@ -8,3 +8,6 @@ __pycache__/
 
 # Secrets and Configs
 .env
+
+#Old project structure
+old-project-structure.txt
