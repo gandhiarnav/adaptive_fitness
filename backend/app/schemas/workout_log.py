@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator
-from datetime import date
+from datetime import date as Date
 
 
 # ── Shared foundation ──────────────────────────────────────────────────────────
@@ -8,7 +8,7 @@ class WorkoutLogBase(BaseModel):
     sets: int
     reps: int
     weight: float
-    date: date
+    date: Date 
 
     @field_validator("exercise")
     @classmethod
@@ -43,7 +43,7 @@ class WorkoutLogUpdate(BaseModel):
     sets: int | None = None
     reps: int | None = None
     weight: float | None = None
-    date: date | None = None
+    date: Date | None = None  
 
 
 # ── Outgoing ──────────────────────────────────────────────────────────────────

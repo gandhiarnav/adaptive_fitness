@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date as Date
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -46,7 +46,7 @@ def list_workouts(
 
 @router.get("/by-date", response_model=list[WorkoutLogResponse])
 def list_workouts_by_date(
-    date: date = Query(..., description="Format: YYYY-MM-DD"),
+    date: Date = Query(..., description="Format: YYYY-MM-DD"),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
