@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date as Date
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -13,6 +13,7 @@ from app.crud.food_journal import (
 )
 from app.db.models.user import User
 from app.schemas.food_journal import FoodJournalCreate, FoodJournalResponse
+from app.services.calorie_estimator import estimate_macros  # ← Milestone 5 wired in
 
 router = APIRouter(prefix="/journal", tags=["Food Journal"])
 
@@ -26,11 +27,20 @@ def log_food(
     """
     Log a new food entry.
 
-    The client sends raw text (e.g. "2 eggs and an apple"). Calorie and
-    protein estimates are None for now — the Milestone 5 service layer
-    will slot in here and populate them before the CRUD call.
+    The raw text is passed through the calorie estimator service before
+    being saved. If the estimator returns 0/0 (no known foods found),
+    the entry is still saved — just without macro estimates.
     """
-    return create_food_entry(db, entry_in=entry_in, user_id=current_user.id)
+    # ── Service layer call ────────────────────────────────────────────────────
+    estimate = estimate_macros(entry_in.raw_text_entry)
+
+    return create_food_entry(
+        db,
+        entry_in=entry_in,
+        user_id=current_user.id,
+        estimated_calories=estimate.calories or None,  # store None instead of 0
+        estimated_protein=estimate.protein or None,
+    )
 
 
 @router.get("/", response_model=list[FoodJournalResponse])
@@ -51,7 +61,7 @@ def list_food_entries(
 
 @router.get("/by-date", response_model=list[FoodJournalResponse])
 def list_food_entries_by_date(
-    date: date = Query(..., description="Format: YYYY-MM-DD"),
+    date: Date = Query(..., description="Format: YYYY-MM-DD"),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
@@ -73,7 +83,7 @@ def delete_food_entry_route(
     Delete a specific food journal entry.
 
     The ownership check inside get_entry_by_id ensures users can only
-    delete their own entries — not anyone else's.
+    delete their own entries.
     """
     entry = get_entry_by_id(db, entry_id=entry_id, user_id=current_user.id)
     if entry is None:
