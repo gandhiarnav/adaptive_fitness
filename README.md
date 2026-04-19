@@ -1,4 +1,4 @@
-# Adaptive Fitness Backend
+# Adaptive Fitness
 
 A highly modular, scalable FastAPI backend designed for an adaptive fitness and nutrition tracking application. The architecture is built with a strict separation of concerns to support future machine learning integrations (e.g., AI calorie estimation, macro logic, and progress prediction) and an eventual migration to PostgreSQL.
 
