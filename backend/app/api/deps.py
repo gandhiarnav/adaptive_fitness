@@ -22,9 +22,9 @@ def get_db():
 
 
 # ── Auth Dependency ────────────────────────────────────────────────────────────
-# This tells FastAPI where clients send their token (POST /auth/login).
+# This tells FastAPI where clients send their token (POST /api/v1/auth/login).
 # FastAPI uses this to render the "Authorize" button in /docs automatically.
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 def get_current_user(
