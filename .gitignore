@@ -11,3 +11,6 @@ __pycache__/
 
 #Old project structure
 old-project-structure.txt
+
+# Databases
+*.db
