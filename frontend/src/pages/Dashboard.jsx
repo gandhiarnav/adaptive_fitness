@@ -147,13 +147,22 @@ export default function Dashboard() {
 
   // ── Error state ────────────────────────────────────────────────────────────
   if (error) {
+    const isProfileError = error.toLowerCase().includes('profile');
     return (
       <div className="dashboard-error-page">
         <div className="dashboard-error-card">
-          <div className="error-icon">⚠️</div>
-          <h2>Something went wrong</h2>
+          <div className="error-icon">{isProfileError ? '👤' : '⚠️'}</div>
+          <h2>{isProfileError ? 'Profile Incomplete' : 'Something went wrong'}</h2>
           <p>{error}</p>
-          <button className="btn-primary" onClick={handleLogout}>Back to Login</button>
+          {isProfileError ? (
+            <button className="btn-primary" onClick={() => navigate('/profile')}>
+              Set Up Profile
+            </button>
+          ) : (
+            <button className="btn-primary" onClick={handleLogout}>
+              Back to Login
+            </button>
+          )}
         </div>
       </div>
     );

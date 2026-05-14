@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Journal from './pages/Journal';
+import Profile from './pages/Profile';
 
 /**
  * PrivateRoute — auth guard
@@ -48,6 +49,10 @@ export default function App() {
         <Route
           path="/journal"
           element={<PrivateRoute><Journal /></PrivateRoute>}
+        />
+        <Route
+          path="/profile"
+          element={<PrivateRoute><Profile /></PrivateRoute>}
         />
 
         {/* Catch-all: unknown URLs → dashboard (guard handles the rest) */}
