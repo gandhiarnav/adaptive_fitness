@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { logout } from '../api/auth';
 import { apiClient } from '../api/client';
 import './Dashboard.css';
@@ -179,6 +179,12 @@ export default function Dashboard() {
         {/* Date heading */}
         <div className="dash-date">{formatDate(summary.date)}</div>
         <h1 className="dash-heading">Daily Dashboard</h1>
+
+        {/* ── Page tabs ─────────────────────────────────────────────────── */}
+        <div className="dash-tabs">
+          <span className="dash-tab active">📊 Overview</span>
+          <Link to="/journal" className="dash-tab">📝 Log a Meal</Link>
+        </div>
 
         {/* ── Calorie hero card ─────────────────────────────────────────── */}
         <section className="hero-card glass-card">
