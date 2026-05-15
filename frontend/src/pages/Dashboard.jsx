@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { logout } from '../api/auth';
 import { apiClient } from '../api/client';
+import logo from '../assets/logo.png';
 import './Dashboard.css';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -178,7 +179,10 @@ export default function Dashboard() {
 
       {/* ── Navbar ─────────────────────────────────────────────────────── */}
       <nav className="dash-nav">
-        <div className="dash-nav-brand">💪 Adaptive Fitness</div>
+        <div className="dash-nav-brand">
+          <img src={logo} alt="Adaptive Fitness" className="nav-logo" />
+          Adaptive Fitness
+        </div>
         <button className="dash-logout-btn" onClick={handleLogout}>
           Sign Out
         </button>

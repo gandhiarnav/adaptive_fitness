@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { logout } from '../api/auth';
 import { getProfile, createProfile, updateProfile } from '../api/profile';
+import logo from '../assets/logo.png';
 import './Profile.css';
 
 // ── Constants matching backend Literal types ───────────────────────────────────
@@ -138,7 +139,10 @@ export default function Profile() {
       <nav className="profile-nav">
         <div className="profile-nav-left">
           <Link to="/dashboard" className="nav-back">← Dashboard</Link>
-          <span className="profile-nav-brand">💪 Adaptive Fitness</span>
+          <span className="profile-nav-brand">
+            <img src={logo} alt="Adaptive Fitness" className="nav-logo" />
+            Adaptive Fitness
+          </span>
         </div>
         <button className="profile-logout-btn" onClick={handleLogout}>Sign Out</button>
       </nav>

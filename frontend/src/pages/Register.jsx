@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { register } from '../api/auth';
+import logo from '../assets/logo.png';
 import './Login.css'; // Reuse the same auth page styles
 
 export default function Register() {
@@ -34,7 +35,7 @@ export default function Register() {
 
       <div className="auth-card">
         <div className="auth-brand">
-          <div className="auth-logo">💪</div>
+          <img src={logo} alt="Adaptive Fitness logo" className="auth-logo-img" />
           <h1 className="auth-title">Create Account</h1>
           <p className="auth-subtitle">Start your fitness journey today</p>
         </div>

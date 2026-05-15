@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { logout } from '../api/auth';
 import { logMeal } from '../api/journal';
+import logo from '../assets/logo.png';
 import './Journal.css';
 
 const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Other'];
@@ -60,7 +61,10 @@ export default function Journal() {
           <Link to="/dashboard" className="nav-back">
             ← Dashboard
           </Link>
-          <span className="journal-nav-brand">💪 Adaptive Fitness</span>
+          <span className="journal-nav-brand">
+            <img src={logo} alt="Adaptive Fitness" className="nav-logo" />
+            Adaptive Fitness
+          </span>
         </div>
         <button className="journal-logout-btn" onClick={handleLogout}>
           Sign Out

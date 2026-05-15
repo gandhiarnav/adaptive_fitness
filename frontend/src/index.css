@@ -16,3 +16,13 @@ body {
 a { color: inherit; }
 button { font-family: inherit; }
 input, textarea, select { font-family: inherit; }
+
+/* Shared navbar logo — used across all pages */
+.nav-logo {
+  height: 26px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 6px;
+  vertical-align: middle;
+  margin-right: 0.4rem;
+}
