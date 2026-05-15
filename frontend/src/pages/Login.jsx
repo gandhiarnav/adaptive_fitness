@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login } from '../api/auth';
+import logo from '../assets/logo.png';
 import './Login.css';
 
 export default function Login() {
@@ -36,7 +37,7 @@ export default function Login() {
       <div className="auth-card">
         {/* Logo / Brand */}
         <div className="auth-brand">
-          <div className="auth-logo">💪</div>
+          <img src={logo} alt="Adaptive Fitness logo" className="auth-logo-img" />
           <h1 className="auth-title">Adaptive Fitness</h1>
           <p className="auth-subtitle">Your AI-powered fitness companion</p>
         </div>
