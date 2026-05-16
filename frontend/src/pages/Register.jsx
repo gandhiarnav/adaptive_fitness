@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { register } from '../api/auth';
 import logo from '../assets/logo.png';
+import bgGym from '../assets/bg-gym.jpg';
 import './Login.css'; // Reuse the same auth page styles
 
 export default function Register() {
@@ -29,7 +30,10 @@ export default function Register() {
   }
 
   return (
-    <div className="auth-page">
+    <div 
+      className="auth-page" 
+      style={{ backgroundImage: `url(${bgGym})` }}
+    >
       <div className="blob blob-1" />
       <div className="blob blob-2" />
 
