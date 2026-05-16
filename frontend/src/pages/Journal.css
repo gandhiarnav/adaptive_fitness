@@ -2,12 +2,30 @@
 
 .journal-page {
   min-height: 100vh;
-  background: #0f0f1a;
+  background-color: #0f0f1a;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   color: #fff;
   font-family: 'Inter', system-ui, sans-serif;
   position: relative;
   overflow-x: hidden;
 }
+
+/* Warm, food-appropriate overlay — lets the image breathe */
+.journal-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(10, 8, 20, 0.55) 0%,
+    rgba(60, 20, 5, 0.5) 100%
+  );
+  z-index: 0;
+  pointer-events: none;
+}
+
 
 /* Subtle background orbs */
 .journal-orb {
@@ -96,13 +114,16 @@
 
 /* ── Form card ────────────────────────────────────────────────────────────── */
 .journal-card {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 12, 30, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 1.25rem;
   padding: 2rem;
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 }
 
 /* Form section */

@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { logout } from '../api/auth';
 import { logMeal } from '../api/journal';
 import logo from '../assets/logo.png';
+import bgMeal from '../assets/bg-meal.jpg';
 import './Journal.css';
 
 const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Other'];
@@ -50,7 +51,10 @@ export default function Journal() {
   const canSubmit = content.trim().length > 0 && status !== 'loading';
 
   return (
-    <div className="journal-page">
+    <div
+      className="journal-page"
+      style={{ backgroundImage: `url(${bgMeal})` }}
+    >
       {/* Subtle background orbs */}
       <div className="journal-orb journal-orb-1" />
       <div className="journal-orb journal-orb-2" />
