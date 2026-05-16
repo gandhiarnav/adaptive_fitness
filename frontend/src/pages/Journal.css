@@ -109,8 +109,12 @@
 
 /* ── Page header ──────────────────────────────────────────────────────────── */
 .journal-header  { margin-bottom: 0.5rem; }
-.journal-title   { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.3rem; }
-.journal-subtitle { font-size: 0.9rem; color: rgba(255, 255, 255, 0.4); }
+.journal-title   { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.3rem; text-shadow: 0 2px 12px rgba(0,0,0,0.5); }
+.journal-subtitle {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.75);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+}
 
 /* ── Form card ────────────────────────────────────────────────────────────── */
 .journal-card {
@@ -257,8 +261,9 @@
 .journal-hint {
   text-align: center;
   font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.65);
   font-style: italic;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
 }
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
