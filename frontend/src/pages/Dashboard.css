@@ -2,11 +2,28 @@
 
 .dashboard-page {
   min-height: 100vh;
-  background: #0f0f1a;
+  background-color: #0f0f1a;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   color: #fff;
   font-family: 'Inter', system-ui, sans-serif;
   position: relative;
   overflow-x: hidden;
+}
+
+/* Dark overlay — keeps cards readable */
+.dashboard-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(10, 8, 25, 0.6) 0%,
+    rgba(20, 10, 60, 0.55) 100%
+  );
+  z-index: 0;
+  pointer-events: none;
 }
 
 /* Background blobs */
@@ -95,11 +112,13 @@
 
 /* ── Glass card base ──────────────────────────────────────────────────────── */
 .glass-card {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(12, 10, 28, 0.6);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 1.25rem;
   padding: 1.75rem;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
   animation: fadeIn 0.5s ease;
 }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }

@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { logout } from '../api/auth';
 import { apiClient } from '../api/client';
 import logo from '../assets/logo.png';
+import bgDash from '../assets/bg-dash.jpg';
 import './Dashboard.css';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -172,7 +173,10 @@ export default function Dashboard() {
   const calRem = summary.calories_remaining;
 
   return (
-    <div className="dashboard-page">
+    <div
+      className="dashboard-page"
+      style={{ backgroundImage: `url(${bgDash})` }}
+    >
       {/* Background */}
       <div className="dash-blob dash-blob-1" />
       <div className="dash-blob dash-blob-2" />
