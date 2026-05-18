@@ -95,6 +95,27 @@ npm install
 # Start the Vite development server
 npm run dev
 
+The React app will be available at http://localhost:5173
+
+⚠️ Production Deployment
+To deploy this application to production, follow these steps:
+
+1. Database Configuration
+Update the DATABASE_URL in backend/app/.env to point to a PostgreSQL database.
+
+DATABASE_URL=postgresql://username:password@localhost/dbname
+2. Build the Frontend
+Run the build command to create an optimized production build:
+
+cd frontend
+npm run build
+3. Serve the Application
+Mount the static frontend build in your FastAPI application:
+
+Static files are served from the 'dist' folder.
+4. CORS Configuration
+Ensure your frontend URL is added to the CORS configuration in main.py.
+
 
 
 
