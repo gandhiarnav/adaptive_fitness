@@ -61,7 +61,11 @@ adaptive_fitness/
 │
 └── README.md
 
+💻 Local Development Setup
+To run this project locally, you will need two terminal windows open—one for the backend and one for the frontend.
 
+1. Start the Backend API
+Navigate to the root directory and open your first terminal:
 
 # Set up the virtual environment
 python -m venv venv
@@ -77,6 +81,10 @@ alembic upgrade head
 # Run the server
 uvicorn app.main:app --reload
 
+The API will be available at http://127.0.0.1:8000. View the interactive documentation at http://127.0.0.1:8000/docs.
+
+2. Start the Frontend Client
+Open a second terminal from the root directory:
 
 # Navigate to the frontend
 cd frontend
