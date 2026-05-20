@@ -10,7 +10,7 @@
  *        const data = await apiClient.get('/summary/today')
  */
 
-const BASE_URL = 'http://127.0.0.1:8000/api/v1';
+const BASE_URL = '/api/v1';
 
 /** The localStorage key where we persist the JWT. */
 export const TOKEN_KEY = 'af_access_token';
