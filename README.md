@@ -27,7 +27,7 @@ This project is organized as a full-stack monorepo.
 * **Intelligent Macro Logic:** Dynamic Daily Energy Expenditure (TDEE) and macro target calculations based on user profile and fitness goals (weight loss, muscle gain, maintenance, endurance).
 * **Categorized Food Journal:** Log meals seamlessly with categories (Breakfast, Lunch, Dinner, Other) and raw text descriptions.
 * **Calorie Estimator Service:** An isolated service layer designed to parse natural language food entries and estimate macros. Built as a foundation for future AI/ML pipeline integration.
-* **Unified Dashboard:** Real-time calculation of daily targets vs. consumed calories and protein.
+* **Unified Dashboard:** Real-time calculation of daily targets vs. consumed calories and protein
 
 ## 📂 Project Structure
 
