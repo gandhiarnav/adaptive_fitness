@@ -3,17 +3,49 @@ Calorie Estimator Service
 ─────────────────────────
 Analyses a raw food text entry and returns estimated calories and protein.
 
-Architecture note:
-    This module is intentionally structured in two layers:
+HOW TEXT PROCESSING WORKS
+──────────────────────────
+Input: "had 2 rotis with a tablespoon of butter and 3 eggs"
 
-    1. `_parse_food_text()`  — the "brain". Right now it uses a keyword
-       lookup table. In the future, replace ONLY this function with an ML
-       model, an LLM call, or a nutrition API. Nothing outside this file
-       needs to change.
+Step 1 — Lowercase & normalise
+    → "had 2 rotis with a tablespoon of butter and 3 eggs"
 
-    2. `estimate_macros()`   — the public interface that the route layer
-       calls. It orchestrates parsing and aggregation, and is the function
-       that was left as a seam in the food journal route.
+Step 2 — Measurement detection
+    The parser scans for measurement words (tablespoon, teaspoon, cup, etc.)
+    and notes their position. When a food is found after a measurement word,
+    the measurement's gram-weight overrides the default serving size.
+
+    "a tablespoon of butter"
+        → measurement: tablespoon = 14g
+        → food: butter = 717 kcal per 100g
+        → calories = 717 * (14/100) ≈ 100 kcal  (not a full serving)
+
+Step 3 — Food keyword scan (longest key first)
+    Keys are sorted by length descending so "protein bar" is checked before
+    "bar", preventing partial-match false positives.
+
+Step 4 — Quantity detection
+    For each food found, the parser looks at the word immediately before it:
+        "3 eggs"     → digit   "3" → quantity = 3
+        "two rotis"  → word    "two" → quantity = 2
+        "a banana"   → article "a"  → quantity = 1
+        "eggs"       → nothing → quantity = 1 (default)
+
+Step 5 — Calorie & protein calculation
+    Each food stores nutrition per 100g internally.
+    A default_serving_g field defines what "1 unit" means (1 egg = 50g).
+
+    calories = (calories_per_100g / 100) * grams * quantity
+    protein  = (protein_per_100g  / 100) * grams * quantity
+
+Step 6 — Aggregate and return
+    All matched items are summed into a single MacroEstimate.
+
+FUTURE UPGRADE PATH
+───────────────────
+Replace _parse_food_text() with any smarter logic — spaCy NER, an LLM
+call, or the Nutritionix API. The public estimate_macros() interface
+and everything that calls it stays identical.
 """
 
 from dataclasses import dataclass
@@ -30,94 +62,221 @@ class MacroEstimate:
 
 @dataclass
 class _FoodItem:
-    """Internal: a single recognised food with its per-unit nutrition."""
+    """
+    Internal: a single food with per-100g nutrition and a default serving size.
+
+    calories_per_100g / protein_per_100g: standard nutritional values
+    default_serving_g: what "1 unit" weighs in grams
+        e.g. 1 egg = 50g, 1 roti = 40g, 1 cup of rice = 195g
+    """
     name: str
-    calories_per_unit: int
-    protein_per_unit: int  # grams
+    calories_per_100g: float
+    protein_per_100g: float
+    default_serving_g: float
+
+    @property
+    def calories_per_unit(self) -> float:
+        return self.calories_per_100g * self.default_serving_g / 100
+
+    @property
+    def protein_per_unit(self) -> float:
+        return self.protein_per_100g * self.default_serving_g / 100
+
+
+# ── Measurement units → grams ──────────────────────────────────────────────────
+# When a measurement word is found before a food, these gram values replace
+# the food's default_serving_g for that specific mention.
+
+_MEASUREMENT_GRAMS: dict[str, float] = {
+    # Spoon measurements
+    "teaspoon":     5.0,
+    "teaspoons":    5.0,
+    "tsp":          5.0,
+    "tablespoon":  14.0,
+    "tablespoons": 14.0,
+    "tbsp":        14.0,
+
+    # Volume measurements
+    "cup":        240.0,
+    "cups":       240.0,
+    "glass":      240.0,
+    "bowl":       300.0,   # approximate medium bowl
+
+    # Portion words
+    "slice":       30.0,   # approx 1 slice of bread/paratha
+    "slices":      30.0,
+    "handful":     30.0,
+    "piece":       80.0,
+    "pieces":      80.0,
+    "scoop":       30.0,   # protein powder scoop
+    "scoops":      30.0,
+}
+
+# Quantity words → numeric multiplier
+_QUANTITY_WORDS: dict[str, float] = {
+    "a": 1, "an": 1, "one": 1, "two": 2, "three": 3,
+    "four": 4, "five": 5, "six": 6, "half": 0.5,
+}
 
 
 # ── Nutrition knowledge base ───────────────────────────────────────────────────
-# Each entry represents one common unit (1 egg, 1 cup of rice, etc.)
-# Expand this freely — or replace _parse_food_text() with an API/ML call.
+# Format: "key": _FoodItem(name, kcal_per_100g, protein_per_100g, default_serving_g)
 
 _FOOD_DB: dict[str, _FoodItem] = {
-    # Proteins
-    "egg":          _FoodItem("egg",          78,   6),
-    "eggs":         _FoodItem("egg",          78,   6),
-    "chicken":      _FoodItem("chicken",     165,  31),
-    "tuna":         _FoodItem("tuna",        130,  28),
-    "salmon":       _FoodItem("salmon",      208,  20),
-    "beef":         _FoodItem("beef",        250,  26),
-    "paneer":       _FoodItem("paneer",      265,  18),
-    "tofu":         _FoodItem("tofu",         76,   8),
-    "dal":          _FoodItem("dal",         116,   9),
-    "lentils":      _FoodItem("lentils",     116,   9),
-    "whey":         _FoodItem("whey",        120,  25),
-    # Carbs
-    "rice":         _FoodItem("rice",        200,   4),
-    "roti":         _FoodItem("roti",        120,   3),
-    "chapati":      _FoodItem("chapati",     120,   3),
-    "bread":        _FoodItem("bread",        80,   3),
-    "oats":         _FoodItem("oats",        150,   5),
-    "pasta":        _FoodItem("pasta",       220,   8),
-    "potato":       _FoodItem("potato",      130,   3),
-    "banana":       _FoodItem("banana",       89,   1),
-    "apple":        _FoodItem("apple",        95,   0),
-    "mango":        _FoodItem("mango",       201,   3),
-    # Dairy & fats
-    "milk":         _FoodItem("milk",        149,   8),
-    "curd":         _FoodItem("curd",        100,  11),
-    "yogurt":       _FoodItem("yogurt",      100,  11),
-    "butter":       _FoodItem("butter",      102,   0),
-    "cheese":       _FoodItem("cheese",      113,   7),
-    # Snacks / misc
-    "almonds":      _FoodItem("almonds",     164,   6),
-    "peanuts":      _FoodItem("peanuts",     166,   7),
-    "protein bar":  _FoodItem("protein bar", 200,  20),
+
+    # ── Eggs & Proteins ────────────────────────────────────────────────────────
+    "egg":              _FoodItem("egg",              143, 13.0,  50),   # 1 medium egg
+    "eggs":             _FoodItem("egg",              143, 13.0,  50),
+    "chicken breast":   _FoodItem("chicken breast",   165, 31.0, 150),   # 1 breast
+    "chicken":          _FoodItem("chicken",          239, 27.0, 150),
+    "tuna":             _FoodItem("tuna",             130, 28.0, 100),
+    "salmon":           _FoodItem("salmon",           208, 20.0, 150),
+    "beef":             _FoodItem("beef",             250, 26.0, 100),
+    "paneer":           _FoodItem("paneer",           265, 18.0, 100),
+    "tofu":             _FoodItem("tofu",              76,  8.0, 100),
+    "dal":              _FoodItem("dal",               93,  5.0, 250),   # 1 bowl cooked
+    "lentils":          _FoodItem("lentils",          116,  9.0, 200),
+    "rajma":            _FoodItem("rajma",            127,  9.0, 250),   # 1 bowl
+    "chhole":           _FoodItem("chhole",           164,  9.0, 250),
+    "chickpeas":        _FoodItem("chickpeas",        164,  9.0, 200),
+    "whey":             _FoodItem("whey protein",     370, 80.0,  30),   # 1 scoop
+    "protein powder":   _FoodItem("protein powder",  370, 80.0,  30),
+
+    # ── Indian Breads ──────────────────────────────────────────────────────────
+    "paratha":          _FoodItem("paratha",          260,  5.5,  80),   # 1 medium paratha
+    "aloo paratha":     _FoodItem("aloo paratha",     290,  6.0, 100),   # stuffed
+    "roti":             _FoodItem("roti",             264,  8.9,  40),   # 1 roti
+    "rotis":            _FoodItem("roti",             264,  8.9,  40),
+    "chapati":          _FoodItem("chapati",          264,  8.9,  40),
+    "puri":             _FoodItem("puri",             330,  6.0,  35),   # 1 small puri
+    "naan":             _FoodItem("naan",             310,  9.0,  90),   # 1 naan
+    "bread":            _FoodItem("bread",            265,  9.0,  30),   # 1 slice
+
+    # ── Rice & Grains ──────────────────────────────────────────────────────────
+    "rice":             _FoodItem("rice",             130,  2.7, 195),   # 1 cup cooked
+    "biryani":          _FoodItem("biryani",          190,  8.0, 300),   # 1 plate
+    "khichdi":          _FoodItem("khichdi",          130,  5.0, 250),
+    "poha":             _FoodItem("poha",             180,  3.0, 180),   # 1 serving
+    "upma":             _FoodItem("upma",             160,  4.0, 200),
+    "idli":             _FoodItem("idli",              58,  2.0,  40),   # 1 idli
+    "dosa":             _FoodItem("dosa",             168,  4.0, 100),   # 1 plain dosa
+    "oats":             _FoodItem("oats",             379, 13.0,  40),   # 1 serving dry
+    "pasta":            _FoodItem("pasta",            131,  5.0, 180),   # 1 cup cooked
+    "bread":            _FoodItem("bread",            265,  9.0,  30),
+
+    # ── Vegetables & Sides ────────────────────────────────────────────────────
+    "potato":           _FoodItem("potato",            77,  2.0, 150),   # 1 medium
+    "aloo":             _FoodItem("aloo",              77,  2.0, 150),
+    "palak":            _FoodItem("palak",             23,  2.9, 100),
+    "sabzi":            _FoodItem("sabzi",             80,  2.0, 150),   # generic veggie dish
+    "sambar":           _FoodItem("sambar",            50,  3.0, 200),   # 1 bowl
+
+    # ── Fruits ────────────────────────────────────────────────────────────────
+    "banana":           _FoodItem("banana",            89,  1.1, 120),   # 1 medium
+    "apple":            _FoodItem("apple",             52,  0.3, 182),   # 1 medium
+    "mango":            _FoodItem("mango",             60,  0.8, 336),   # 1 whole
+    "orange":           _FoodItem("orange",            47,  0.9, 180),
+
+    # ── Dairy & Fats ──────────────────────────────────────────────────────────
+    "milk":             _FoodItem("milk",              61,  3.2, 240),   # 1 glass
+    "curd":             _FoodItem("curd",              98, 11.0, 200),   # 1 bowl
+    "yogurt":           _FoodItem("yogurt",            59,  3.5, 200),
+    "butter":           _FoodItem("butter",           717,  0.9,  10),   # base = 1 tsp (10g)
+    "ghee":             _FoodItem("ghee",             900,  0.0,  10),   # base = 1 tsp
+    "cheese":           _FoodItem("cheese",           402, 25.0,  28),   # 1 slice/oz
+    "paneer":           _FoodItem("paneer",           265, 18.0, 100),
+
+    # ── Oils (almost always used in tsp/tbsp, not whole units) ────────────────
+    "oil":              _FoodItem("oil",              884,  0.0,  14),   # base = 1 tbsp
+    "olive oil":        _FoodItem("olive oil",        884,  0.0,  14),
+    "coconut oil":      _FoodItem("coconut oil",      862,  0.0,  14),
+
+    # ── Nuts & Snacks ─────────────────────────────────────────────────────────
+    "almonds":          _FoodItem("almonds",          579, 21.0,  28),   # small handful
+    "peanuts":          _FoodItem("peanuts",          567, 26.0,  28),
+    "peanut butter":    _FoodItem("peanut butter",    588, 25.0,  32),   # 2 tbsp
+    "protein bar":      _FoodItem("protein bar",      380, 20.0,  60),   # 1 bar
+
+    # ── Drinks ────────────────────────────────────────────────────────────────
+    "chai":             _FoodItem("chai",              50,  2.0, 200),   # 1 cup with milk
+    "coffee":           _FoodItem("coffee",            37,  0.6, 240),   # 1 cup with milk
+    "lassi":            _FoodItem("lassi",             98,  3.0, 300),   # 1 glass sweet
 }
 
-# Quantity words and their multipliers (e.g. "two eggs" → 2)
-_QUANTITY_WORDS: dict[str, int] = {
-    "a": 1, "an": 1, "one": 1, "two": 2, "three": 3,
-    "four": 4, "five": 5, "six": 6,
-}
 
+# ── Internal parsing layer ─────────────────────────────────────────────────────
 
-# ── Internal parsing layer (swap this out for ML/API later) ───────────────────
-
-def _parse_food_text(text: str) -> list[tuple[_FoodItem, int]]:
+def _find_measurement(words_before: list[str]) -> float | None:
     """
-    Scan the text for known food keywords and infer quantities.
+    Scan the words preceding a food keyword for a measurement unit.
 
-    Returns a list of (FoodItem, quantity) tuples.
+    Returns the gram value of the measurement if found, None otherwise.
 
-    This is intentionally simple — a keyword scan with basic quantity
-    detection. Replace the body of this function with any smarter logic
-    (spaCy NER, GPT function-calling, Nutritionix API, etc.) and the
-    rest of the service layer stays identical.
+    Example: ["had", "a", "tablespoon", "of"] → 14.0 (tablespoon grams)
+    """
+    for word in reversed(words_before):  # scan right-to-left (closest word first)
+        if word in _MEASUREMENT_GRAMS:
+            return _MEASUREMENT_GRAMS[word]
+    return None
+
+
+def _find_quantity(words_before: list[str]) -> float:
+    """
+    Scan the words preceding a food keyword for a numeric quantity.
+
+    Returns the quantity as a float (default 1.0).
+
+    Example: ["ate", "3"] → 3.0
+    Example: ["had", "two"] → 2.0
+    Example: ["a", "tablespoon", "of"] → 1.0 (no standalone quantity)
+    """
+    for word in reversed(words_before):
+        if word.replace(".", "", 1).isdigit():   # handles "2" and "2.5"
+            return float(word)
+        if word in _QUANTITY_WORDS:
+            return float(_QUANTITY_WORDS[word])
+    return 1.0
+
+
+def _parse_food_text(text: str) -> list[tuple[_FoodItem, float, float]]:
+    """
+    Scan the text for known food keywords and infer quantities and measurements.
+
+    Returns a list of (FoodItem, quantity, grams_per_unit) tuples.
+
+    grams_per_unit is:
+      - the measurement's gram value if a measurement word was found
+        (e.g. "tablespoon of butter" → 14g, ignoring butter's default)
+      - the food's default_serving_g otherwise
     """
     text_lower = text.lower()
-    results: list[tuple[_FoodItem, int]] = []
+    # Normalise common abbreviations before scanning
+    text_lower = (text_lower
+                  .replace("tsp", "teaspoon")
+                  .replace("tbsp", "tablespoon")
+                  .replace(",", " ")
+                  .replace(".", " "))
 
-    # Check multi-word keys first (e.g. "protein bar") before single words
+    results: list[tuple[_FoodItem, float, float]] = []
+
+    # Sort longest key first to catch multi-word items before their substrings
     for food_key, food_item in sorted(_FOOD_DB.items(), key=lambda x: -len(x[0])):
-        if food_key in text_lower:
-            # Look for a numeric digit or quantity word immediately before this food
-            food_index = text_lower.find(food_key)
-            preceding = text_lower[:food_index].strip().split()
+        if food_key not in text_lower:
+            continue
 
-            quantity = 1  # default to 1 serving
-            if preceding:
-                last_word = preceding[-1]
-                if last_word.isdigit():
-                    quantity = int(last_word)
-                elif last_word in _QUANTITY_WORDS:
-                    quantity = _QUANTITY_WORDS[last_word]
+        food_index = text_lower.find(food_key)
+        words_before = text_lower[:food_index].strip().split()
 
-            results.append((food_item, quantity))
+        measurement_g = _find_measurement(words_before)
+        quantity = _find_quantity(words_before)
 
-            # Remove matched text to avoid double-counting substrings
-            text_lower = text_lower.replace(food_key, "", 1)
+        # Use measurement grams if found, otherwise food's default serving
+        grams = measurement_g if measurement_g is not None else food_item.default_serving_g
+
+        results.append((food_item, quantity, grams))
+
+        # Erase matched text to prevent double-counting substrings
+        text_lower = text_lower.replace(food_key, " ", 1)
 
     return results
 
@@ -128,18 +287,32 @@ def estimate_macros(raw_text: str) -> MacroEstimate:
     """
     Main entry point for the calorie estimator.
 
-    Takes the user's raw journal text (e.g. "ate 2 eggs and a banana")
-    and returns a MacroEstimate with total calories and protein.
+    Takes the user's raw journal text and returns a MacroEstimate.
+    Returns MacroEstimate(0, 0) if no known foods are detected.
 
-    Returns MacroEstimate(0, 0) if no known foods are found rather than
-    raising — the route layer will still save the entry, just without estimates.
+    Examples:
+        "2 eggs and a banana"
+            → eggs:   143 * (50/100) * 2  = 143 kcal,  13g protein
+            → banana: 89  * (120/100) * 1 = 107 kcal,  1g protein
+            → total:  250 kcal, 14g protein
+
+        "a tablespoon of ghee on 2 rotis"
+            → ghee:  900 * (14/100) * 1 = 126 kcal, 0g protein
+            → roti:  264 * (40/100) * 2 = 211 kcal, 7g protein
+            → total: 337 kcal, 7g protein
     """
     parsed = _parse_food_text(raw_text)
 
     if not parsed:
         return MacroEstimate(calories=0, protein=0)
 
-    total_calories = sum(item.calories_per_unit * qty for item, qty in parsed)
-    total_protein = sum(item.protein_per_unit * qty for item, qty in parsed)
+    total_calories = sum(
+        round(item.calories_per_100g * grams / 100 * qty)
+        for item, qty, grams in parsed
+    )
+    total_protein = sum(
+        round(item.protein_per_100g * grams / 100 * qty)
+        for item, qty, grams in parsed
+    )
 
     return MacroEstimate(calories=total_calories, protein=total_protein)
