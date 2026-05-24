@@ -10,7 +10,11 @@
  *        const data = await apiClient.get('/summary/today')
  */
 
-const BASE_URL = '/api/v1';
+// Base URL for all API calls.
+// In production (Render), set VITE_API_URL=https://api.alphazero.dev
+// In local dev, leave VITE_API_URL unset (or set to http://localhost:8000)
+// and Vite's proxy will handle it transparently.
+const BASE_URL = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`;
 
 /** The localStorage key where we persist the JWT. */
 export const TOKEN_KEY = 'af_access_token';
