@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: adaptive-fitness-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false           # Set to: https://api.alphazero.dev in the Render dashboard
+    routes:
+      # Redirect all 404s to index.html so React Router can handle client-side navigation
+      - type: rewrite
+        source: /*
+        destination: /index.html
