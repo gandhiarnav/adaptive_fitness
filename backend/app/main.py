@@ -7,15 +7,11 @@ from app.core.config import settings
 app = FastAPI(title=settings.PROJECT_NAME)
 
 # ── CORS ───────────────────────────────────────────────────────────────────────
-# Allow the frontend dev server to talk to this API.
-# Add any other origins (staging URLs, etc.) to this list as needed.
-origins = [
-    "http://localhost:3000",   # React / Create-React-App default
-    "http://localhost:5173",   # Vite / Vue default
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:5173",
-    "https://mechanism-points-varies-prot.trycloudflare.com",  # Cloudflare tunnel
-]
+# Origins are read from the ALLOWED_ORIGINS env var (comma-separated string)
+# so they can be different between local dev and production without code changes.
+# Dev default (set in config.py): localhost:3000 and localhost:5173
+# Production: set ALLOWED_ORIGINS=https://fit.alphazero.dev in the Render dashboard
+origins = [o.strip() for o in settings.ALLOWED_ORIGINS.split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
