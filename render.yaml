@@ -1,0 +1,43 @@
+# ─── Render Blueprint — Adaptive Fitness (Monorepo) ───────────────────────────
+# This file lets you deploy both the backend API and frontend static site
+# from a single Render Blueprint in one click.
+#
+# Deploy order: Render will spin up services in parallel by default.
+# The backend should be healthy before the frontend's VITE_API_URL is set,
+# so deploy the backend first and confirm it's live, then deploy the frontend.
+
+services:
+  # ── Backend (FastAPI / Uvicorn) ─────────────────────────────────────────────
+  - type: web
+    name: adaptive-fitness-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SECRET_KEY
+        sync: false           # Set in Render dashboard — never commit the real value
+      - key: DATABASE_URL
+        sync: false           # Set in Render dashboard — PostgreSQL connection string
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "30"
+      - key: ALLOWED_ORIGINS
+        sync: false           # Set to: https://fit.alphazero.dev in the Render dashboard
+
+  # ── Frontend (Vite / React — Static Site) ───────────────────────────────────
+  - type: web
+    name: adaptive-fitness-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false           # Set to: https://api.alphazero.dev in the Render dashboard
+    routes:
+      # SPA fallback — React Router handles all client-side routes
+      - type: rewrite
+        source: /*
+        destination: /index.html
