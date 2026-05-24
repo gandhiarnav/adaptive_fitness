@@ -7,9 +7,22 @@ __pycache__/
 *.pyc
 
 # Secrets and Configs
+# Ignore ALL .env files (including backend/.env, frontend/.env, etc.)
 .env
+**/.env
+# But always commit the example files so developers know what vars are needed
+!.env.example
+!**/.env.example
 
-#Old project structure
+# Node
+node_modules/
+**/node_modules/
+
+# Build output
+dist/
+build/
+
+# Old project structure
 old-project-structure.txt
 
 # Databases
