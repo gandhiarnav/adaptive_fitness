@@ -22,7 +22,7 @@ services:
       - key: ALGORITHM
         value: HS256
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
-        value: "30"
+        value: "1440"
       - key: ALLOWED_ORIGINS
         sync: false           # Set to: https://fit.alphazero.dev in the Render dashboard
 
