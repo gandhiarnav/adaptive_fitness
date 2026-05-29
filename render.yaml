@@ -24,7 +24,8 @@ services:
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "1440"
       - key: ALLOWED_ORIGINS
-        sync: false           # Set to: https://fit.alphazero.dev in the Render dashboard
+        # Comma-separated — add https://fit.alphazero.dev here once the custom domain is live
+        value: "https://adaptive-fitness-frontend.onrender.com,http://localhost:5173,http://localhost:3000"
 
   # ── Frontend (Vite / React — Static Site) ───────────────────────────────────
   - type: web
@@ -35,7 +36,8 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
-        sync: false           # Set to: https://api.alphazero.dev in the Render dashboard
+        # Update to https://api.alphazero.dev once the custom domain is live
+        value: "https://adaptive-fitness-api.onrender.com"
     routes:
       # SPA fallback — React Router handles all client-side routes
       - type: rewrite
