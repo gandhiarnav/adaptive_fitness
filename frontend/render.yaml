@@ -7,7 +7,9 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
-        value: "https://api.alphazero.dev"
+        # Temporarily using .onrender.com while api.alphazero.dev DNS propagates.
+        # Switch to https://api.alphazero.dev once it's confirmed reachable.
+        value: "https://adaptive-fitness-api.onrender.com"
     routes:
       # Redirect all 404s to index.html so React Router can handle client-side navigation
       - type: rewrite

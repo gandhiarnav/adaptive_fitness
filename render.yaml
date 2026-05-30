@@ -36,8 +36,9 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
-        # Points to the custom domain; falls back gracefully to .onrender.com if DNS isn't set
-        value: "https://api.alphazero.dev"
+        # Temporarily using .onrender.com while api.alphazero.dev DNS propagates.
+        # Switch to https://api.alphazero.dev once it's confirmed reachable.
+        value: "https://adaptive-fitness-api.onrender.com"
     routes:
       # SPA fallback — React Router handles all client-side routes
       - type: rewrite
