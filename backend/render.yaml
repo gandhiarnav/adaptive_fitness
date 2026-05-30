@@ -15,5 +15,4 @@ services:
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "30"
       - key: ALLOWED_ORIGINS
-        # Comma-separated — add https://fit.alphazero.dev here once the custom domain is live
-        value: "https://adaptive-fitness-frontend.onrender.com,http://localhost:5173,http://localhost:3000"
+        value: "https://fit.alphazero.dev,https://adaptive-fitness-frontend.onrender.com,http://localhost:5173,http://localhost:3000"

@@ -7,8 +7,7 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
-        # Update to https://api.alphazero.dev once the custom domain is live
-        value: "https://adaptive-fitness-api.onrender.com"
+        value: "https://api.alphazero.dev"
     routes:
       # Redirect all 404s to index.html so React Router can handle client-side navigation
       - type: rewrite
