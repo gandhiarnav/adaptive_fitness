@@ -2,6 +2,10 @@
 
 A full-stack, highly modular fitness and nutrition tracking application. The architecture is designed with a strict separation of concerns to support future machine learning integrations (e.g., NLP-based calorie estimation, adaptive macro logic, and predictive progress modeling).
 
+## Live Demo
+
+https://fit.alphazero.dev
+
 ---
 
 ## 🏗️ Architecture & Tech Stack
