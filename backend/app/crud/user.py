@@ -54,3 +54,31 @@ def deactivate_user(db: Session, user: User) -> User:
     db.commit()
     db.refresh(user)
     return user
+
+
+# ── Admin CRUD ─────────────────────────────────────────────────────────────────
+
+def get_all_users(db: Session) -> list[User]:
+    """Return every user in the database, ordered by sign-up date."""
+    return db.query(User).order_by(User.created_at.desc()).all()
+
+
+def toggle_user_active(db: Session, user: User) -> User:
+    """Flip is_active between True and False (soft-ban / reactivate)."""
+    user.is_active = not user.is_active
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def delete_user_by_id(db: Session, user_id: int) -> bool:
+    """
+    Hard-delete a user and all their associated data.
+    Returns True if a row was deleted, False if the user wasn't found.
+    """
+    user = get_user_by_id(db, user_id)
+    if user is None:
+        return False
+    db.delete(user)
+    db.commit()
+    return True

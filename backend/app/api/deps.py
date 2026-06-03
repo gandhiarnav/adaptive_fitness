@@ -73,3 +73,20 @@ def get_current_active_user(
             detail="This account has been deactivated.",
         )
     return current_user
+
+
+def get_current_admin(
+    current_user: User = Depends(get_current_active_user),
+) -> User:
+    """
+    Admin-only guard — extends get_current_active_user by also checking is_admin.
+
+    Usage: any admin route declares `admin: User = Depends(get_current_admin)`.
+    Regular users with valid JWTs get a 403 Forbidden — they can't sneak in.
+    """
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required.",
+        )
+    return current_user
