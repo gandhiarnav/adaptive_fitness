@@ -120,7 +120,13 @@ export default function Dashboard() {
   const [error,   setError]   = useState('');
 
   useEffect(() => {
-    apiClient.get('/summary/today')
+    const localDate = new Date();
+    const year = localDate.getFullYear();
+    const month = String(localDate.getMonth() + 1).padStart(2, '0');
+    const day = String(localDate.getDate()).padStart(2, '0');
+    const today = `${year}-${month}-${day}`;
+
+    apiClient.get(`/summary/today?date=${today}`)
       .then(setSummary)
       .catch((err) => {
         if (err.message.toLowerCase().includes('profile')) {

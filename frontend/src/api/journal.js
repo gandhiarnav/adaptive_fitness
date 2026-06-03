@@ -21,7 +21,11 @@ import { apiClient } from './client';
  * @param {string} [date]    - ISO date string, defaults to today
  */
 export async function logMeal(mealType, content, date) {
-  const today = new Date().toISOString().split('T')[0];
+  const localDate = new Date();
+  const year = localDate.getFullYear();
+  const month = String(localDate.getMonth() + 1).padStart(2, '0');
+  const day = String(localDate.getDate()).padStart(2, '0');
+  const today = `${year}-${month}-${day}`;
 
   const raw_text_entry =
     mealType === 'Other'
