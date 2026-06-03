@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login } from '../api/auth';
+import { adminLogin } from '../api/admin';
 import logo from '../assets/logo.png';
 import bgGym from '../assets/bg-gym.jpg';
 import './Login.css';
@@ -8,10 +9,13 @@ import './Login.css';
 export default function Login() {
   const navigate = useNavigate();
 
+  const [mode, setMode]         = useState('user');   // 'user' | 'admin'
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
+
+  const isAdmin = mode === 'admin';
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -19,9 +23,13 @@ export default function Login() {
     setLoading(true);
 
     try {
-      await login(email, password);
-      // Token is now saved in localStorage — navigate into the app
-      navigate('/dashboard', { replace: true });
+      if (isAdmin) {
+        await adminLogin(email, password);
+        navigate('/admin', { replace: true });
+      } else {
+        await login(email, password);
+        navigate('/dashboard', { replace: true });
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -30,20 +38,46 @@ export default function Login() {
   }
 
   return (
-    <div 
-      className="auth-page" 
+    <div
+      className="auth-page"
       style={{ backgroundImage: `url(${bgGym})` }}
     >
       {/* Background blobs */}
       <div className="blob blob-1" />
       <div className="blob blob-2" />
 
-      <div className="auth-card">
+      <div className={`auth-card ${isAdmin ? 'auth-card--admin' : ''}`}>
         {/* Logo / Brand */}
         <div className="auth-brand">
           <img src={logo} alt="Adaptive Fitness logo" className="auth-logo-img" />
           <h1 className="auth-title">Adaptive Fitness</h1>
-          <p className="auth-subtitle">Your AI-powered fitness companion</p>
+          <p className="auth-subtitle">
+            {isAdmin ? 'Admin Control Panel' : 'Your AI-powered fitness companion'}
+          </p>
+        </div>
+
+        {/* Mode toggle — SaaS-style segmented control */}
+        <div className="auth-mode-toggle" role="tablist" aria-label="Login mode">
+          <button
+            role="tab"
+            aria-selected={!isAdmin}
+            className={`auth-mode-btn ${!isAdmin ? 'active' : ''}`}
+            onClick={() => { setMode('user'); setError(''); }}
+            type="button"
+            id="tab-user"
+          >
+            User
+          </button>
+          <button
+            role="tab"
+            aria-selected={isAdmin}
+            className={`auth-mode-btn ${isAdmin ? 'active' : ''}`}
+            onClick={() => { setMode('admin'); setError(''); }}
+            type="button"
+            id="tab-admin"
+          >
+            Admin
+          </button>
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
@@ -83,17 +117,28 @@ export default function Login() {
 
           <button
             type="submit"
-            className="auth-btn"
+            className={`auth-btn ${isAdmin ? 'auth-btn--admin' : ''}`}
             disabled={loading || !email || !password}
           >
-            {loading ? <span className="spinner" /> : 'Sign In'}
+            {loading
+              ? <span className="spinner" />
+              : isAdmin ? '🔐 Sign In as Admin' : 'Sign In'
+            }
           </button>
         </form>
 
-        <p className="auth-switch">
-          Don't have an account?{' '}
-          <Link to="/register" className="auth-link">Create one</Link>
-        </p>
+        {!isAdmin && (
+          <p className="auth-switch">
+            Don't have an account?{' '}
+            <Link to="/register" className="auth-link">Create one</Link>
+          </p>
+        )}
+
+        {isAdmin && (
+          <p className="auth-switch auth-admin-note">
+            🛡️ Admin access is restricted. Unauthorized access is logged.
+          </p>
+        )}
       </div>
     </div>
   );

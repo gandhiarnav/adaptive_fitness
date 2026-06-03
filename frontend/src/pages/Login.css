@@ -234,3 +234,59 @@
 .auth-link:hover {
   text-decoration: underline;
 }
+
+/* ── Admin mode toggle (segmented control) ───────────────────────────────── */
+
+.auth-mode-toggle {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  padding: 4px;
+  margin-bottom: 1.5rem;
+  gap: 4px;
+}
+
+.auth-mode-btn {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.55rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.auth-mode-btn.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.auth-mode-btn:hover:not(.active) {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Admin card — rose/red accent instead of violet */
+.auth-card--admin {
+  border-color: rgba(244, 63, 63, 0.25);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(244, 63, 63, 0.1);
+}
+
+.auth-card--admin .field-input:focus {
+  border-color: #f87171;
+  background: rgba(248, 113, 113, 0.08);
+}
+
+/* Admin sign-in button — red gradient */
+.auth-btn--admin {
+  background: linear-gradient(135deg, #dc2626, #f87171);
+}
+
+/* Admin note text */
+.auth-admin-note {
+  color: rgba(248, 113, 113, 0.6) !important;
+  font-size: 0.8rem !important;
+}
