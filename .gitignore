@@ -27,3 +27,7 @@ old-project-structure.txt
 
 # Databases
 *.db
+
+# Admin seed script — contains hardcoded credentials, never commit
+seed_admin.py
+**/seed_admin.py
