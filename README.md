@@ -1,10 +1,8 @@
 # Adaptive Fitness Tracker
 
+🌐 **Live Site:** [fit.alphazero.dev](https://fit.alphazero.dev)
+
 A full-stack, highly modular fitness and nutrition tracking application. The architecture is designed with a strict separation of concerns to support future machine learning integrations (e.g., NLP-based calorie estimation, adaptive macro logic, and predictive progress modeling).
-
-## Live Demo
-
-https://fit.alphazero.dev
 
 ---
 
@@ -43,6 +41,7 @@ This project is organized as a full-stack monorepo.
 - **Workout Log:** Track workout sessions with exercises, sets, reps, and weight.
 - **Unified Dashboard:** Real-time summary of daily targets vs. consumed calories, protein, and workout activity.
 - **Profile Management:** Create and update personal metrics (weight, height, age, goals, activity level) that drive all macro calculations.
+- **Admin Panel:** Dedicated admin dashboard for managing users, viewing platform-wide stats, and overseeing application data.
 
 ---
 
@@ -222,6 +221,8 @@ React app available at: **http://localhost:5173**
 
 The project ships with a `render.yaml` Blueprint for one-click deployment on [Render](https://render.com).
 
+> ✅ **The app is live at [fit.alphazero.dev](https://fit.alphazero.dev)**
+
 ### Services deployed
 
 | Service | Type | Root Dir |
@@ -243,5 +244,6 @@ The project ships with a `render.yaml` Blueprint for one-click deployment on [Re
    alembic upgrade head
    ```
 5. **Deploy** — Render will build and serve both services automatically.
+
 
 > ⚠️ Deploy and confirm the backend is healthy **before** the frontend build runs, so `VITE_API_URL` resolves correctly at build time.
