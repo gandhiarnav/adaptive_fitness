@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     DATABASE_URL: str
+    GEMINI_API_KEY: str = ""        # optional — leave empty to use keyword-based fallback
 
     # Comma-separated list of allowed CORS origins.
     # Dev default covers Vite (5173) and CRA (3000).

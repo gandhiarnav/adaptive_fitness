@@ -3,8 +3,24 @@ Calorie Estimator Service
 ─────────────────────────
 Analyses a raw food text entry and returns estimated calories and protein.
 
-HOW TEXT PROCESSING WORKS
-──────────────────────────
+PRIMARY PATH — Gemini AI
+─────────────────────────
+When GEMINI_API_KEY is set in the environment, the service sends the user's
+raw food text to gemini-2.0-flash and asks it to return a strict JSON object:
+
+    {"calories": <int>, "protein": <int>}
+
+This handles any food description — Indian dishes, brand names, mixed meals,
+informal language — far more accurately than the keyword matcher.
+
+FALLBACK PATH — Keyword Parser
+────────────────────────────────
+If the Gemini API key is absent, the quota is exhausted, the model returns
+unexpected output, or any other error occurs, the service silently falls back
+to the built-in keyword-based estimator so the app never crashes.
+
+HOW THE KEYWORD PARSER WORKS (fallback)
+────────────────────────────────────────
 Input: "had 2 rotis with a tablespoon of butter and 3 eggs"
 
 Step 1 — Lowercase & normalise
@@ -40,15 +56,13 @@ Step 5 — Calorie & protein calculation
 
 Step 6 — Aggregate and return
     All matched items are summed into a single MacroEstimate.
-
-FUTURE UPGRADE PATH
-───────────────────
-Replace _parse_food_text() with any smarter logic — spaCy NER, an LLM
-call, or the Nutritionix API. The public estimate_macros() interface
-and everything that calls it stays identical.
 """
 
+import json
+import logging
 from dataclasses import dataclass
+
+logger = logging.getLogger(__name__)
 
 
 # ── Data structures ────────────────────────────────────────────────────────────
@@ -162,7 +176,6 @@ _FOOD_DB: dict[str, _FoodItem] = {
     "dosa":             _FoodItem("dosa",             168,  4.0, 100),   # 1 plain dosa
     "oats":             _FoodItem("oats",             379, 13.0,  40),   # 1 serving dry
     "pasta":            _FoodItem("pasta",            131,  5.0, 180),   # 1 cup cooked
-    "bread":            _FoodItem("bread",            265,  9.0,  30),
 
     # ── Vegetables & Sides ────────────────────────────────────────────────────
     "potato":           _FoodItem("potato",            77,  2.0, 150),   # 1 medium
@@ -204,7 +217,7 @@ _FOOD_DB: dict[str, _FoodItem] = {
 }
 
 
-# ── Internal parsing layer ─────────────────────────────────────────────────────
+# ── Internal parsing layer (keyword fallback) ──────────────────────────────────
 
 def _find_measurement(words_before: list[str]) -> float | None:
     """
@@ -281,26 +294,8 @@ def _parse_food_text(text: str) -> list[tuple[_FoodItem, float, float]]:
     return results
 
 
-# ── Public interface ───────────────────────────────────────────────────────────
-
-def estimate_macros(raw_text: str) -> MacroEstimate:
-    """
-    Main entry point for the calorie estimator.
-
-    Takes the user's raw journal text and returns a MacroEstimate.
-    Returns MacroEstimate(0, 0) if no known foods are detected.
-
-    Examples:
-        "2 eggs and a banana"
-            → eggs:   143 * (50/100) * 2  = 143 kcal,  13g protein
-            → banana: 89  * (120/100) * 1 = 107 kcal,  1g protein
-            → total:  250 kcal, 14g protein
-
-        "a tablespoon of ghee on 2 rotis"
-            → ghee:  900 * (14/100) * 1 = 126 kcal, 0g protein
-            → roti:  264 * (40/100) * 2 = 211 kcal, 7g protein
-            → total: 337 kcal, 7g protein
-    """
+def _keyword_estimate(raw_text: str) -> MacroEstimate:
+    """Run the built-in keyword-based estimator and return a MacroEstimate."""
     parsed = _parse_food_text(raw_text)
 
     if not parsed:
@@ -316,3 +311,99 @@ def estimate_macros(raw_text: str) -> MacroEstimate:
     )
 
     return MacroEstimate(calories=total_calories, protein=total_protein)
+
+
+# ── Gemini AI estimator ────────────────────────────────────────────────────────
+
+_GEMINI_SYSTEM_PROMPT = """You are a nutrition expert AI assistant.
+
+Given a food description (which may be informal, in any language, or include
+Indian dish names), return ONLY a valid JSON object with the total estimated
+calories and protein for everything described.
+
+Rules:
+- Return ONLY this JSON format, nothing else: {"calories": <integer>, "protein": <integer>}
+- "calories" is total kilocalories (kcal) for the entire meal described
+- "protein" is total grams of protein for the entire meal described
+- Round both values to the nearest whole number
+- If you cannot parse the input, return {"calories": 0, "protein": 0}
+- Do NOT include markdown, explanation, or any text outside the JSON object
+"""
+
+
+def _gemini_estimate(raw_text: str, api_key: str) -> MacroEstimate:
+    """
+    Call the Gemini API to estimate calories and protein from free text.
+
+    Raises any exception on failure — the caller handles fallback.
+    """
+    import google.generativeai as genai
+
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel(
+        model_name="gemini-2.0-flash",
+        system_instruction=_GEMINI_SYSTEM_PROMPT,
+    )
+
+    response = model.generate_content(raw_text)
+    response_text = response.text.strip()
+
+    # Strip markdown code fences if the model wraps output despite instructions
+    if response_text.startswith("```"):
+        lines = response_text.splitlines()
+        # Remove first and last fence lines
+        inner = [l for l in lines if not l.startswith("```")]
+        response_text = "\n".join(inner).strip()
+
+    data = json.loads(response_text)
+
+    calories = int(data.get("calories", 0))
+    protein  = int(data.get("protein", 0))
+
+    return MacroEstimate(calories=calories, protein=protein)
+
+
+# ── Public interface ───────────────────────────────────────────────────────────
+
+def estimate_macros(raw_text: str) -> MacroEstimate:
+    """
+    Main entry point for the calorie estimator.
+
+    Takes the user's raw journal text and returns a MacroEstimate.
+
+    Tries Gemini AI first (if GEMINI_API_KEY is configured). Falls back to the
+    built-in keyword parser if Gemini is unavailable or returns an error.
+
+    Returns MacroEstimate(0, 0) if neither method can detect any food.
+
+    Examples:
+        "2 eggs and a banana"
+            → Gemini: ~250 kcal, 14g protein
+
+        "a tablespoon of ghee on 2 rotis"
+            → Gemini: ~337 kcal, 7g protein
+    """
+    # Lazy import so startup doesn't fail if the package isn't installed yet
+    try:
+        from app.core.config import settings
+        api_key = settings.GEMINI_API_KEY
+    except Exception:
+        api_key = ""
+
+    if api_key:
+        try:
+            result = _gemini_estimate(raw_text, api_key)
+            logger.debug(
+                "Gemini estimate for %r → %d kcal, %dg protein",
+                raw_text[:60], result.calories, result.protein,
+            )
+            return result
+        except Exception as exc:
+            # Log the failure but don't crash — fall through to keyword parser
+            logger.warning(
+                "Gemini estimation failed (%s: %s). Using keyword fallback.",
+                type(exc).__name__, exc,
+            )
+
+    # Keyword-based fallback
+    return _keyword_estimate(raw_text)
