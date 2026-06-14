@@ -39,11 +39,29 @@ export async function logMeal(mealType, content, date) {
 }
 
 /**
- * Fetch all journal entries for the current user.
+ * Fetch all journal entries for the current user (newest first).
  * @returns {Promise<Array>}
  */
 export async function getJournalEntries() {
   return apiClient.get('/journal/');
+}
+
+/**
+ * Fetch journal entries for a specific date.
+ * @param {string} date - ISO date string e.g. "2026-06-15"
+ * @returns {Promise<Array>}
+ */
+export async function getJournalEntriesByDate(date) {
+  return apiClient.get(`/journal/by-date?date=${date}`);
+}
+
+/** Returns today's date as a "YYYY-MM-DD" string in local time. */
+export function getTodayString() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 /**

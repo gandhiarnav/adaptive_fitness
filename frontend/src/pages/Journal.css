@@ -276,8 +276,62 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   TABS
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.journal-tabs {
+  display: flex;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 0.3rem;
+}
+
+.journal-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.875rem;
+  border: none;
+  border-radius: 0.75rem;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  white-space: nowrap;
+}
+
+.journal-tab:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.journal-tab.active {
+  background: rgba(124, 58, 237, 0.22);
+  color: #c4b5fd;
+  box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.tab-icon { font-size: 1rem; line-height: 1; }
+
+/* Smooth tab-panel entry */
+.tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  animation: fadeUp 0.22s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    PAST ENTRIES SECTION
    ══════════════════════════════════════════════════════════════════════════ */
+
 
 .entries-section {
   display: flex;

@@ -1,7 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { logout } from '../api/auth';
-import { logMeal, getJournalEntries, updateJournalEntry, deleteJournalEntry } from '../api/journal';
+import {
+  logMeal,
+  getJournalEntries,
+  getJournalEntriesByDate,
+  updateJournalEntry,
+  deleteJournalEntry,
+  getTodayString,
+} from '../api/journal';
 import logo from '../assets/logo.png';
 import bgMeal from '../assets/bg-meal.jpg';
 import './Journal.css';
@@ -15,7 +22,6 @@ const MEAL_ICONS = {
   Other:     '🍽️',
 };
 
-/** Detect meal type from raw_text_entry prefix written by logMeal/updateJournalEntry */
 function parseMealType(rawText) {
   for (const type of ['Breakfast', 'Lunch', 'Dinner']) {
     if (rawText?.startsWith(`${type}:`)) return type;
@@ -23,7 +29,6 @@ function parseMealType(rawText) {
   return 'Other';
 }
 
-/** Strip the "MealType: " prefix from raw text for display / editing */
 function parseContent(rawText) {
   for (const type of ['Breakfast', 'Lunch', 'Dinner']) {
     const prefix = `${type}: `;
@@ -38,53 +43,180 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+// ── Shared entry list + edit/delete logic extracted as a component ────────────
+
+function EntryList({ entries, onEdit, onDelete, deleteTarget, deleteStatus, deleteErrMsg, onCancelDelete, onConfirmDelete }) {
+  if (entries.length === 0) {
+    return (
+      <div className="entries-empty">
+        <span className="entries-empty-icon">📋</span>
+        <p>No entries here yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="entries-list">
+      {entries.map((entry) => {
+        const mt         = parseMealType(entry.raw_text_entry);
+        const text       = parseContent(entry.raw_text_entry);
+        const isDeleting = deleteTarget === entry.id;
+
+        return (
+          <div
+            key={entry.id}
+            className={`entry-card ${isDeleting ? 'entry-card--deleting' : ''}`}
+          >
+            <div className="entry-card-top">
+              <div className="entry-badge">
+                <span className="entry-badge-icon">{MEAL_ICONS[mt]}</span>
+                <span className="entry-badge-type">{mt}</span>
+              </div>
+              <div className="entry-meta">
+                <span className="entry-date">{formatDate(entry.date)}</span>
+                <div className="entry-actions">
+                  <button
+                    className="entry-action-btn entry-action-edit"
+                    onClick={() => onEdit(entry)}
+                    aria-label="Edit entry"
+                    title="Edit"
+                  >✏️</button>
+                  <button
+                    className="entry-action-btn entry-action-delete"
+                    onClick={() => onDelete(entry.id)}
+                    aria-label="Delete entry"
+                    title="Delete"
+                  >🗑️</button>
+                </div>
+              </div>
+            </div>
+
+            <p className="entry-text">{text}</p>
+
+            {(entry.estimated_calories || entry.estimated_protein) && (
+              <div className="entry-macros">
+                {entry.estimated_calories && (
+                  <span className="macro-pill macro-cal">🔥 {entry.estimated_calories} kcal</span>
+                )}
+                {entry.estimated_protein && (
+                  <span className="macro-pill macro-prot">💪 {entry.estimated_protein}g protein</span>
+                )}
+              </div>
+            )}
+
+            {isDeleting && (
+              <div className="delete-confirm">
+                <p className="delete-confirm-msg">
+                  {deleteStatus === 'error'
+                    ? `⚠️ ${deleteErrMsg}`
+                    : 'Delete this entry? This cannot be undone.'}
+                </p>
+                <div className="delete-confirm-actions">
+                  <button
+                    className="delete-confirm-btn delete-confirm-cancel"
+                    onClick={onCancelDelete}
+                    disabled={deleteStatus === 'loading'}
+                  >Cancel</button>
+                  <button
+                    className="delete-confirm-btn delete-confirm-ok"
+                    onClick={onConfirmDelete}
+                    disabled={deleteStatus === 'loading'}
+                  >
+                    {deleteStatus === 'loading'
+                      ? <><span className="btn-spinner" /> Deleting…</>
+                      : 'Delete'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Main page component ───────────────────────────────────────────────────────
+
 export default function Journal() {
   const navigate = useNavigate();
+  const today = getTodayString();
+
+  // ── Active tab ──────────────────────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState('today'); // 'today' | 'history'
 
   // ── Log-form state ──────────────────────────────────────────────────────────
   const [mealType, setMealType] = useState('Other');
   const [content,  setContent]  = useState('');
-  const [status,   setStatus]   = useState(null); // null | 'loading' | 'success' | 'error'
-  const [message,  setMessage]  = useState('');
+  const [logStatus,  setLogStatus]  = useState(null);
+  const [logMessage, setLogMessage] = useState('');
 
-  // ── Entries list state ──────────────────────────────────────────────────────
-  const [entries,       setEntries]       = useState([]);
-  const [loadingList,   setLoadingList]   = useState(true);
-  const [listError,     setListError]     = useState(null);
+  // ── Today's entries ─────────────────────────────────────────────────────────
+  const [todayEntries,  setTodayEntries]  = useState([]);
+  const [todayLoading,  setTodayLoading]  = useState(true);
+  const [todayError,    setTodayError]    = useState(null);
 
-  // ── Delete confirmation state ───────────────────────────────────────────────
-  const [deleteTarget,    setDeleteTarget]    = useState(null); // entry id to delete
-  const [deleteStatus,    setDeleteStatus]    = useState(null); // null | 'loading' | 'error'
-  const [deleteErrMsg,    setDeleteErrMsg]    = useState('');
+  // ── History entries ─────────────────────────────────────────────────────────
+  const [historyEntries,  setHistoryEntries]  = useState([]);
+  const [historyLoading,  setHistoryLoading]  = useState(false);
+  const [historyError,    setHistoryError]    = useState(null);
+  const [historyLoaded,   setHistoryLoaded]   = useState(false); // lazy-load once
+
+  // ── Shared delete state ─────────────────────────────────────────────────────
+  const [deleteTarget,  setDeleteTarget]  = useState(null);
+  const [deleteStatus,  setDeleteStatus]  = useState(null);
+  const [deleteErrMsg,  setDeleteErrMsg]  = useState('');
 
   // ── Edit modal state ────────────────────────────────────────────────────────
-  const [editEntry,    setEditEntry]    = useState(null); // the entry being edited
+  const [editEntry,    setEditEntry]    = useState(null);
   const [editMealType, setEditMealType] = useState('Other');
   const [editContent,  setEditContent]  = useState('');
-  const [editStatus,   setEditStatus]   = useState(null); // null | 'loading' | 'success' | 'error'
+  const [editStatus,   setEditStatus]   = useState(null);
   const [editMessage,  setEditMessage]  = useState('');
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
+  // ── Data fetching ───────────────────────────────────────────────────────────
+
+  const fetchToday = useCallback(async () => {
+    setTodayLoading(true);
+    setTodayError(null);
+    try {
+      const data = await getJournalEntriesByDate(today);
+      setTodayEntries(data);
+    } catch (err) {
+      setTodayError(err.message);
+    } finally {
+      setTodayLoading(false);
+    }
+  }, [today]);
+
+  const fetchHistory = useCallback(async () => {
+    setHistoryLoading(true);
+    setHistoryError(null);
+    try {
+      const data = await getJournalEntries();
+      setHistoryEntries(data);
+      setHistoryLoaded(true);
+    } catch (err) {
+      setHistoryError(err.message);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, []);
+
+  // Fetch today's entries on mount
+  useEffect(() => { fetchToday(); }, [fetchToday]);
+
+  // Lazy-load history when switching to that tab for the first time
+  useEffect(() => {
+    if (activeTab === 'history' && !historyLoaded) {
+      fetchHistory();
+    }
+  }, [activeTab, historyLoaded, fetchHistory]);
 
   function handleLogout() {
     logout();
     navigate('/login', { replace: true });
   }
-
-  const fetchEntries = useCallback(async () => {
-    setLoadingList(true);
-    setListError(null);
-    try {
-      const data = await getJournalEntries();
-      setEntries(data);
-    } catch (err) {
-      setListError(err.message);
-    } finally {
-      setLoadingList(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchEntries(); }, [fetchEntries]);
 
   // ── Log new entry ───────────────────────────────────────────────────────────
 
@@ -92,23 +224,53 @@ export default function Journal() {
     e.preventDefault();
     if (!content.trim()) return;
 
-    setStatus('loading');
-    setMessage('');
+    setLogStatus('loading');
+    setLogMessage('');
 
     try {
       await logMeal(mealType, content);
-      setStatus('success');
-      setMessage(`${mealType} logged successfully!`);
+      setLogStatus('success');
+      setLogMessage(`${mealType} logged successfully!`);
       setContent('');
-      setTimeout(() => setStatus(null), 3000);
-      fetchEntries(); // refresh list
+      setTimeout(() => setLogStatus(null), 3000);
+      // Refresh both lists so new entry appears immediately
+      fetchToday();
+      if (historyLoaded) fetchHistory();
     } catch (err) {
-      setStatus('error');
-      setMessage(err.message);
+      setLogStatus('error');
+      setLogMessage(err.message);
     }
   }
 
-  const canSubmit = content.trim().length > 0 && status !== 'loading';
+  const canSubmit = content.trim().length > 0 && logStatus !== 'loading';
+
+  // ── Delete ──────────────────────────────────────────────────────────────────
+
+  function requestDelete(id) {
+    setDeleteTarget(id);
+    setDeleteStatus(null);
+    setDeleteErrMsg('');
+  }
+
+  function cancelDelete() {
+    if (deleteStatus === 'loading') return;
+    setDeleteTarget(null);
+  }
+
+  async function confirmDelete() {
+    if (deleteStatus === 'loading') return;
+    setDeleteStatus('loading');
+    try {
+      await deleteJournalEntry(deleteTarget);
+      setTodayEntries(prev => prev.filter(e => e.id !== deleteTarget));
+      setHistoryEntries(prev => prev.filter(e => e.id !== deleteTarget));
+      setDeleteTarget(null);
+      setDeleteStatus(null);
+    } catch (err) {
+      setDeleteStatus('error');
+      setDeleteErrMsg(err.message);
+    }
+  }
 
   // ── Edit modal ──────────────────────────────────────────────────────────────
 
@@ -134,58 +296,38 @@ export default function Journal() {
 
     try {
       const updated = await updateJournalEntry(editEntry.id, editMealType, editContent);
-      setEntries(prev => prev.map(en => en.id === updated.id ? updated : en));
+      const applyUpdate = list => list.map(en => en.id === updated.id ? updated : en);
+      setTodayEntries(applyUpdate);
+      setHistoryEntries(applyUpdate);
       setEditStatus('success');
-      setEditMessage('Entry updated successfully!');
-      setTimeout(() => {
-        setEditEntry(null);
-        setEditStatus(null);
-      }, 1200);
+      setEditMessage('Entry updated!');
+      setTimeout(() => { setEditEntry(null); setEditStatus(null); }, 1200);
     } catch (err) {
       setEditStatus('error');
       setEditMessage(err.message);
     }
   }
 
-  // ── Delete ──────────────────────────────────────────────────────────────────
+  // ── Shared delete props ─────────────────────────────────────────────────────
 
-  function requestDelete(id) {
-    setDeleteTarget(id);
-    setDeleteStatus(null);
-    setDeleteErrMsg('');
-  }
-
-  function cancelDelete() {
-    if (deleteStatus === 'loading') return;
-    setDeleteTarget(null);
-  }
-
-  async function confirmDelete() {
-    if (deleteStatus === 'loading') return;
-    setDeleteStatus('loading');
-    try {
-      await deleteJournalEntry(deleteTarget);
-      setEntries(prev => prev.filter(en => en.id !== deleteTarget));
-      setDeleteTarget(null);
-      setDeleteStatus(null);
-    } catch (err) {
-      setDeleteStatus('error');
-      setDeleteErrMsg(err.message);
-    }
-  }
+  const deleteProps = {
+    deleteTarget,
+    deleteStatus,
+    deleteErrMsg,
+    onDelete:        requestDelete,
+    onCancelDelete:  cancelDelete,
+    onConfirmDelete: confirmDelete,
+    onEdit:          openEdit,
+  };
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div
-      className="journal-page"
-      style={{ backgroundImage: `url(${bgMeal})` }}
-    >
-      {/* Background orbs */}
+    <div className="journal-page" style={{ backgroundImage: `url(${bgMeal})` }}>
       <div className="journal-orb journal-orb-1" />
       <div className="journal-orb journal-orb-2" />
 
-      {/* ── Navbar ──────────────────────────────────────────────────────────── */}
+      {/* Navbar */}
       <nav className="journal-nav">
         <div className="journal-nav-left">
           <Link to="/dashboard" className="nav-back">← Dashboard</Link>
@@ -197,190 +339,151 @@ export default function Journal() {
         <button className="journal-logout-btn" onClick={handleLogout}>Sign Out</button>
       </nav>
 
-      {/* ── Main content ─────────────────────────────────────────────────────── */}
       <main className="journal-content">
 
-        {/* ── Page header ─────────────────────────────────────────────────── */}
+        {/* Page header */}
         <header className="journal-header">
           <h1 className="journal-title">Meal Journal</h1>
           <p className="journal-subtitle">Log what you eat to track your progress</p>
         </header>
 
-        {/* ── Log form card ────────────────────────────────────────────────── */}
-        <form className="journal-card" onSubmit={handleSubmit} noValidate>
-
-          <section className="form-section">
-            <label className="form-label">Meal Type</label>
-            <div className="meal-type-grid">
-              {MEAL_TYPES.map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  className={`meal-type-btn ${mealType === type ? 'active' : ''}`}
-                  onClick={() => setMealType(type)}
-                  aria-pressed={mealType === type}
-                >
-                  <span className="meal-type-icon">{MEAL_ICONS[type]}</span>
-                  <span className="meal-type-label">{type}</span>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="form-section">
-            <label className="form-label" htmlFor="meal-content">What did you eat?</label>
-            <textarea
-              id="meal-content"
-              className="journal-textarea"
-              placeholder="e.g., 2 parathas, 100g paneer, 1 glass milk"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={4}
-              maxLength={500}
-            />
-            <div className="char-count">{content.length} / 500</div>
-          </section>
-
-          {status === 'success' && (
-            <div className="journal-status success" role="status">✓ {message}</div>
-          )}
-          {status === 'error' && (
-            <div className="journal-status error" role="alert">{message}</div>
-          )}
-
-          <button type="submit" className="journal-submit-btn" disabled={!canSubmit}>
-            {status === 'loading' ? (
-              <><span className="btn-spinner" /> Logging…</>
-            ) : (
-              'Log Entry'
-            )}
+        {/* ── Tab switcher ──────────────────────────────────────────────────── */}
+        <div className="journal-tabs" role="tablist">
+          <button
+            role="tab"
+            aria-selected={activeTab === 'today'}
+            className={`journal-tab ${activeTab === 'today' ? 'active' : ''}`}
+            onClick={() => setActiveTab('today')}
+            id="tab-today"
+          >
+            <span className="tab-icon">📅</span>
+            Today
           </button>
-        </form>
+          <button
+            role="tab"
+            aria-selected={activeTab === 'history'}
+            className={`journal-tab ${activeTab === 'history' ? 'active' : ''}`}
+            onClick={() => setActiveTab('history')}
+            id="tab-history"
+          >
+            <span className="tab-icon">🗂️</span>
+            History
+          </button>
+        </div>
 
-        <p className="journal-hint">
-          Your entry will be analysed by AI to estimate calories and macros.
-        </p>
+        {/* ════════════════════════════════════════════════════════
+            TODAY TAB
+            ════════════════════════════════════════════════════════ */}
+        {activeTab === 'today' && (
+          <div className="tab-panel" role="tabpanel" aria-labelledby="tab-today">
 
-        {/* ── Past entries section ─────────────────────────────────────────── */}
-        <section className="entries-section">
-          <div className="entries-header">
-            <h2 className="entries-title">Past Entries</h2>
-            {!loadingList && (
-              <span className="entries-count">{entries.length} {entries.length === 1 ? 'entry' : 'entries'}</span>
-            )}
+            {/* Log form */}
+            <form className="journal-card" onSubmit={handleSubmit} noValidate>
+              <section className="form-section">
+                <label className="form-label">Meal Type</label>
+                <div className="meal-type-grid">
+                  {MEAL_TYPES.map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      className={`meal-type-btn ${mealType === type ? 'active' : ''}`}
+                      onClick={() => setMealType(type)}
+                      aria-pressed={mealType === type}
+                    >
+                      <span className="meal-type-icon">{MEAL_ICONS[type]}</span>
+                      <span className="meal-type-label">{type}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              <section className="form-section">
+                <label className="form-label" htmlFor="meal-content">What did you eat?</label>
+                <textarea
+                  id="meal-content"
+                  className="journal-textarea"
+                  placeholder="e.g., 2 parathas, 100g paneer, 1 glass milk"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  rows={4}
+                  maxLength={500}
+                />
+                <div className="char-count">{content.length} / 500</div>
+              </section>
+
+              {logStatus === 'success' && (
+                <div className="journal-status success" role="status">✓ {logMessage}</div>
+              )}
+              {logStatus === 'error' && (
+                <div className="journal-status error" role="alert">{logMessage}</div>
+              )}
+
+              <button type="submit" className="journal-submit-btn" disabled={!canSubmit}>
+                {logStatus === 'loading'
+                  ? <><span className="btn-spinner" /> Logging…</>
+                  : 'Log Entry'}
+              </button>
+            </form>
+
+            <p className="journal-hint">
+              Your entry will be analysed by AI to estimate calories and macros.
+            </p>
+
+            {/* Today's entries */}
+            <section className="entries-section">
+              <div className="entries-header">
+                <h2 className="entries-title">Today's Entries</h2>
+                {!todayLoading && (
+                  <span className="entries-count">
+                    {todayEntries.length} {todayEntries.length === 1 ? 'entry' : 'entries'}
+                  </span>
+                )}
+              </div>
+
+              {todayLoading && (
+                <div className="entries-loading"><span className="btn-spinner" /> Loading…</div>
+              )}
+              {todayError && (
+                <div className="journal-status error">{todayError}</div>
+              )}
+              {!todayLoading && !todayError && (
+                <EntryList entries={todayEntries} {...deleteProps} />
+              )}
+            </section>
           </div>
+        )}
 
-          {loadingList && (
-            <div className="entries-loading">
-              <span className="btn-spinner" /> Loading entries…
-            </div>
-          )}
+        {/* ════════════════════════════════════════════════════════
+            HISTORY TAB
+            ════════════════════════════════════════════════════════ */}
+        {activeTab === 'history' && (
+          <div className="tab-panel" role="tabpanel" aria-labelledby="tab-history">
+            <section className="entries-section">
+              <div className="entries-header">
+                <h2 className="entries-title">All Entries</h2>
+                {!historyLoading && historyLoaded && (
+                  <span className="entries-count">
+                    {historyEntries.length} {historyEntries.length === 1 ? 'entry' : 'entries'}
+                  </span>
+                )}
+              </div>
 
-          {listError && (
-            <div className="journal-status error">{listError}</div>
-          )}
+              {historyLoading && (
+                <div className="entries-loading"><span className="btn-spinner" /> Loading…</div>
+              )}
+              {historyError && (
+                <div className="journal-status error">{historyError}</div>
+              )}
+              {!historyLoading && !historyError && historyLoaded && (
+                <EntryList entries={historyEntries} {...deleteProps} />
+              )}
+            </section>
+          </div>
+        )}
 
-          {!loadingList && !listError && entries.length === 0 && (
-            <div className="entries-empty">
-              <span className="entries-empty-icon">📋</span>
-              <p>No entries yet. Log your first meal above!</p>
-            </div>
-          )}
-
-          {!loadingList && !listError && entries.length > 0 && (
-            <div className="entries-list">
-              {entries.map((entry) => {
-                const mt      = parseMealType(entry.raw_text_entry);
-                const text    = parseContent(entry.raw_text_entry);
-                const isDeleting = deleteTarget === entry.id;
-
-                return (
-                  <div
-                    key={entry.id}
-                    className={`entry-card ${isDeleting ? 'entry-card--deleting' : ''}`}
-                  >
-                    <div className="entry-card-top">
-                      <div className="entry-badge">
-                        <span className="entry-badge-icon">{MEAL_ICONS[mt]}</span>
-                        <span className="entry-badge-type">{mt}</span>
-                      </div>
-                      <div className="entry-meta">
-                        <span className="entry-date">{formatDate(entry.date)}</span>
-                        <div className="entry-actions">
-                          <button
-                            className="entry-action-btn entry-action-edit"
-                            onClick={() => openEdit(entry)}
-                            aria-label="Edit entry"
-                            title="Edit"
-                          >
-                            ✏️
-                          </button>
-                          <button
-                            className="entry-action-btn entry-action-delete"
-                            onClick={() => requestDelete(entry.id)}
-                            aria-label="Delete entry"
-                            title="Delete"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <p className="entry-text">{text}</p>
-
-                    {(entry.estimated_calories || entry.estimated_protein) && (
-                      <div className="entry-macros">
-                        {entry.estimated_calories && (
-                          <span className="macro-pill macro-cal">
-                            🔥 {entry.estimated_calories} kcal
-                          </span>
-                        )}
-                        {entry.estimated_protein && (
-                          <span className="macro-pill macro-prot">
-                            💪 {entry.estimated_protein}g protein
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Inline delete confirmation */}
-                    {isDeleting && (
-                      <div className="delete-confirm">
-                        <p className="delete-confirm-msg">
-                          {deleteStatus === 'error'
-                            ? `⚠️ ${deleteErrMsg}`
-                            : 'Delete this entry? This cannot be undone.'}
-                        </p>
-                        <div className="delete-confirm-actions">
-                          <button
-                            className="delete-confirm-btn delete-confirm-cancel"
-                            onClick={cancelDelete}
-                            disabled={deleteStatus === 'loading'}
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            className="delete-confirm-btn delete-confirm-ok"
-                            onClick={confirmDelete}
-                            disabled={deleteStatus === 'loading'}
-                          >
-                            {deleteStatus === 'loading'
-                              ? <><span className="btn-spinner" /> Deleting…</>
-                              : 'Delete'}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
       </main>
 
-      {/* ── Edit modal ───────────────────────────────────────────────────────── */}
+      {/* ── Edit modal ─────────────────────────────────────────────────────── */}
       {editEntry && (
         <div
           className="edit-modal-overlay"
@@ -397,9 +500,7 @@ export default function Journal() {
                 onClick={closeEdit}
                 disabled={editStatus === 'loading'}
                 aria-label="Close"
-              >
-                ✕
-              </button>
+              >✕</button>
             </div>
 
             <form onSubmit={handleEditSave} noValidate>
@@ -452,19 +553,15 @@ export default function Journal() {
                   className="edit-cancel-btn"
                   onClick={closeEdit}
                   disabled={editStatus === 'loading'}
-                >
-                  Cancel
-                </button>
+                >Cancel</button>
                 <button
                   type="submit"
                   className="journal-submit-btn edit-save-btn"
                   disabled={!editContent.trim() || editStatus === 'loading'}
                 >
-                  {editStatus === 'loading' ? (
-                    <><span className="btn-spinner" /> Saving…</>
-                  ) : (
-                    'Save Changes'
-                  )}
+                  {editStatus === 'loading'
+                    ? <><span className="btn-spinner" /> Saving…</>
+                    : 'Save Changes'}
                 </button>
               </div>
             </form>
