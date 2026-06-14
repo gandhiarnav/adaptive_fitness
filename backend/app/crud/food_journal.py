@@ -3,7 +3,7 @@ from datetime import date
 from sqlalchemy.orm import Session
 
 from app.db.models.food_journal import FoodJournal
-from app.schemas.food_journal import FoodJournalCreate
+from app.schemas.food_journal import FoodJournalCreate, FoodJournalUpdate
 
 
 def create_food_entry(
@@ -89,3 +89,27 @@ def delete_food_entry(db: Session, db_entry: FoodJournal) -> None:
     """Hard-delete a food journal entry."""
     db.delete(db_entry)
     db.commit()
+
+
+def update_food_entry(
+    db: Session,
+    db_entry: FoodJournal,
+    update_in: FoodJournalUpdate,
+    estimated_calories: int | None = None,
+    estimated_protein: int | None = None,
+) -> FoodJournal:
+    """
+    Apply a partial update to an existing food journal entry.
+
+    Only fields explicitly provided in update_in are changed.
+    Callers should pass re-estimated macro values when raw_text_entry changed.
+    """
+    if update_in.raw_text_entry is not None:
+        db_entry.raw_text_entry = update_in.raw_text_entry
+        db_entry.estimated_calories = estimated_calories
+        db_entry.estimated_protein = estimated_protein
+    if update_in.date is not None:
+        db_entry.date = update_in.date
+    db.commit()
+    db.refresh(db_entry)
+    return db_entry

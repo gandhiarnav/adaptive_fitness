@@ -10,9 +10,10 @@ from app.crud.food_journal import (
     get_entries_by_date,
     get_entry_by_id,
     delete_food_entry,
+    update_food_entry,
 )
 from app.db.models.user import User
-from app.schemas.food_journal import FoodJournalCreate, FoodJournalResponse
+from app.schemas.food_journal import FoodJournalCreate, FoodJournalUpdate, FoodJournalResponse
 from app.services.calorie_estimator import estimate_macros  # ← Milestone 5 wired in
 
 router = APIRouter(prefix="/journal", tags=["Food Journal"])
@@ -92,3 +93,42 @@ def delete_food_entry_route(
             detail="Entry not found.",
         )
     delete_food_entry(db, db_entry=entry)
+
+
+@router.patch("/{entry_id}", response_model=FoodJournalResponse)
+def update_food_entry_route(
+    entry_id: int,
+    update_in: FoodJournalUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Partially update a food journal entry (edit raw text and/or date).
+
+    Ownership is enforced — users can only edit their own entries.
+    When raw_text_entry changes the calorie estimator is re-run so
+    the macro estimates stay consistent with the new text.
+    """
+    entry = get_entry_by_id(db, entry_id=entry_id, user_id=current_user.id)
+    if entry is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Entry not found.",
+        )
+
+    estimated_calories = entry.estimated_calories
+    estimated_protein = entry.estimated_protein
+
+    # Re-run the AI estimator only when the text actually changed.
+    if update_in.raw_text_entry is not None:
+        estimate = estimate_macros(update_in.raw_text_entry)
+        estimated_calories = estimate.calories or None
+        estimated_protein = estimate.protein or None
+
+    return update_food_entry(
+        db,
+        db_entry=entry,
+        update_in=update_in,
+        estimated_calories=estimated_calories,
+        estimated_protein=estimated_protein,
+    )
