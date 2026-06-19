@@ -119,92 +119,114 @@ export default function Landing() {
 
       {/* --- HERO SECTION --- */}
       <section className="hero-section">
-        <div className="hero-content">
-          <span className="badge">⚡ AI-Powered Fitness & Nutrition</span>
+        {/* Centered Heading Group */}
+        <div className="hero-title-group">
+          <span className="badge">AlphaZero's Adaptive Fitness</span>
           <h1 className="hero-title">
             Fitness that <span className="highlight-text">adapts</span> to you.
           </h1>
-          <p className="hero-description">
-            Track meals instantly with natural language AI, log workouts, and let our dynamic macro engine update targets based on your actual metabolism and progress.
-          </p>
-          <div className="hero-ctas">
-            <Link to="/register" className="cta-primary">Start Your Journey</Link>
-            <a href="#macro-calculator" onClick={handleScrollToCalculator} className="cta-secondary">
-              Calculate My Macros
-            </a>
-          </div>
-          <div className="social-proof-mini">
-            <div className="avatar-group">
-              <span className="avatar">🥑</span>
-              <span className="avatar">🏋️</span>
-              <span className="avatar">🤖</span>
-              <span className="avatar">📈</span>
-            </div>
-            <p>Join thousands of users tracking with artificial intelligence.</p>
-          </div>
         </div>
 
-        {/* Hero Interactive App Mockup (Saves loading delay of heavy image) */}
-        <div className="hero-mockup-container">
-          <div className="mockup-frame">
-            <div className="mockup-header">
-              <div className="dots">
-                <span className="dot" />
-                <span className="dot" />
-                <span className="dot" />
-              </div>
-              <div className="mockup-title">dashboard.adaptivefitness.app</div>
+        {/* Side-by-Side Content */}
+        <div className="hero-split-content">
+          <div className="hero-left-col">
+            <p className="hero-description">
+              Track meals instantly with natural language AI, log workouts, and let our dynamic macro engine update targets based on your actual metabolism and progress.
+            </p>
+            
+            <div className="hero-ctas">
+              <Link to="/register" className="cta-primary">Start Your Journey</Link>
+              <a href="#macro-calculator" onClick={handleScrollToCalculator} className="cta-secondary">
+                Calculate My Macros
+              </a>
             </div>
-            <div className="mockup-body">
-              <div className="mockup-nav">
-                <div className="mockup-nav-logo">
-                  <div className="logo-bullet" />
-                  Adaptive Fitness
-                </div>
-                <div className="mockup-avatar" />
+
+            {/* Mockup Explanation */}
+            <div className="mockup-explanation-card">
+              <div className="explanation-icon">📊</div>
+              <div className="explanation-text-block">
+                <h4>Interactive Dashboard Preview</h4>
+                <p>
+                  On the right, see our dashboard in action: it uses Gemini Flash to parse meal logs (like chicken biryani) instantly, visualizes daily macro rings, and tracks protein target progress.
+                </p>
               </div>
-              <div className="mockup-main">
-                <div className="mockup-card progress-card">
-                  <div className="mockup-ring">
-                    <svg viewBox="0 0 100 100" className="mockup-ring-svg">
-                      <circle cx="50" cy="50" r="40" className="bg" />
-                      <circle cx="50" cy="50" r="40" className="fg" />
-                    </svg>
-                    <div className="mockup-ring-text">
-                      <span className="val">1,640</span>
-                      <span className="lbl">kcal left</span>
-                    </div>
-                  </div>
-                  <div className="mockup-progress-stats">
-                    <div className="stat-line">
-                      <span>Target:</span>
-                      <strong>2,200 kcal</strong>
-                    </div>
-                    <div className="stat-line">
-                      <span>Consumed:</span>
-                      <strong>560 kcal</strong>
-                    </div>
-                  </div>
-                </div>
+            </div>
 
-                <div className="mockup-card entry-card">
-                  <span className="card-lbl">AI Food Log</span>
-                  <div className="chat-bubble user">
-                    "A bowl of chicken biryani and a glass of buttermilk"
-                  </div>
-                  <div className="chat-bubble ai">
-                    <strong>Estimated:</strong> 520 kcal • 35g Protein
-                  </div>
-                </div>
+            <div className="social-proof-mini">
+              <div className="avatar-group">
+                <span className="avatar">🥑</span>
+                <span className="avatar">🏋️</span>
+                <span className="avatar">🤖</span>
+                <span className="avatar">📈</span>
+              </div>
+              <p>Join thousands of users tracking with artificial intelligence.</p>
+            </div>
+          </div>
 
-                <div className="mockup-card macro-grid">
-                  <div className="mini-bar">
-                    <div className="bar-header"><span>Protein</span><strong>45g / 140g</strong></div>
-                    <div className="bar-track"><div className="bar-fill" style={{ width: '32%', background: '#a78bfa' }} /></div>
+          <div className="hero-right-col">
+            {/* Hero Interactive App Mockup */}
+            <div className="hero-mockup-container">
+              <div className="mockup-frame">
+                <div className="mockup-header">
+                  <div className="dots">
+                    <span className="dot" />
+                    <span className="dot" />
+                    <span className="dot" />
                   </div>
-                  <div className="mini-bar">
-                    <div className="bar-header"><span>Carbs</span><strong>65g / 240g</strong></div>
-                    <div className="bar-track"><div className="bar-fill" style={{ width: '27%', background: '#34d399' }} /></div>
+                  <div className="mockup-title">fit.alphazero.dev</div>
+                </div>
+                <div className="mockup-body">
+                  <div className="mockup-nav">
+                    <div className="mockup-nav-logo">
+                      <div className="logo-bullet" />
+                      Adaptive Fitness
+                    </div>
+                    <div className="mockup-avatar" />
+                  </div>
+                  <div className="mockup-main">
+                    <div className="mockup-card progress-card">
+                      <div className="mockup-ring">
+                        <svg viewBox="0 0 100 100" className="mockup-ring-svg">
+                          <circle cx="50" cy="50" r="40" className="bg" />
+                          <circle cx="50" cy="50" r="40" className="fg" />
+                        </svg>
+                        <div className="mockup-ring-text">
+                          <span className="val">1,640</span>
+                          <span className="lbl">kcal left</span>
+                        </div>
+                      </div>
+                      <div className="mockup-progress-stats">
+                        <div className="stat-line">
+                          <span>Target:</span>
+                          <strong>2,200 kcal</strong>
+                        </div>
+                        <div className="stat-line">
+                          <span>Consumed:</span>
+                          <strong>560 kcal</strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mockup-card entry-card">
+                      <span className="card-lbl">AI Food Log</span>
+                      <div className="chat-bubble user">
+                        "A bowl of chicken biryani and a glass of buttermilk"
+                      </div>
+                      <div className="chat-bubble ai">
+                        <strong>Estimated:</strong> 520 kcal • 35g Protein
+                      </div>
+                    </div>
+
+                    <div className="mockup-card macro-grid">
+                      <div className="mini-bar">
+                        <div className="bar-header"><span>Protein</span><strong>45g / 140g</strong></div>
+                        <div className="bar-track"><div className="bar-fill" style={{ width: '32%', background: '#a78bfa' }} /></div>
+                      </div>
+                      <div className="mini-bar">
+                        <div className="bar-header"><span>Carbs</span><strong>65g / 240g</strong></div>
+                        <div className="bar-track"><div className="bar-fill" style={{ width: '27%', background: '#34d399' }} /></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -289,7 +311,7 @@ export default function Landing() {
             <p className="calculator-tip">
               💡 <strong>Why register?</strong> Creating an account logs your profile parameters and adapts these macros as you log food and track workouts daily!
             </p>
-            
+
             <div className="calculator-cta-box">
               <h3>Ready to lock in these targets?</h3>
               <Link to="/register" className="btn-calc-register">Create Free Account</Link>
