@@ -83,12 +83,30 @@ export default function Landing() {
     });
   };
 
-  const handleScrollToCalculator = (e) => {
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleScrollToSection = (e, id) => {
     e.preventDefault();
-    const element = document.getElementById('macro-calculator');
+    const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -106,9 +124,9 @@ export default function Landing() {
             <span className="brand-name">Adaptive Fitness</span>
           </div>
           <nav className="nav-links">
-            <a href="#features">Features</a>
-            <a href="#macro-calculator" onClick={handleScrollToCalculator}>Calculator</a>
-            <a href="#pricing">Why Us</a>
+            <a href="#features" onClick={(e) => handleScrollToSection(e, 'features')}>Features</a>
+            <a href="#macro-calculator" onClick={(e) => handleScrollToSection(e, 'macro-calculator')}>Calculator</a>
+            <a href="#why-us" onClick={(e) => handleScrollToSection(e, 'why-us')}>Why Us</a>
           </nav>
           <div className="auth-buttons">
             <Link to="/login" className="btn-signin">Sign In</Link>
@@ -136,7 +154,7 @@ export default function Landing() {
             
             <div className="hero-ctas">
               <Link to="/register" className="cta-primary">Start Your Journey</Link>
-              <a href="#macro-calculator" onClick={handleScrollToCalculator} className="cta-secondary">
+              <a href="#macro-calculator" onClick={(e) => handleScrollToSection(e, 'macro-calculator')} className="cta-secondary">
                 Calculate My Macros
               </a>
             </div>
@@ -460,11 +478,11 @@ export default function Landing() {
       </section>
 
       {/* --- CALL TO ACTION --- */}
-      <section className="cta-banner-section">
+      <section id="why-us" className="cta-banner-section">
         <div className="cta-banner-inner">
-          <h2>Stop Guessing. Start Tracking Smarter.</h2>
-          <p>Get instant estimations, track workouts, and adapt your targets in real time.</p>
-          <Link to="/register" className="cta-banner-btn">Create Your Free Account Now</Link>
+          <h2>Why Choose Adaptive Fitness?</h2>
+          <p>We are completely open-source, 100% free, and designed to be extremely user-friendly. Log meals in plain text, track workouts, and let AI adapt your daily budget—with zero paywalls or complex setups.</p>
+          <Link to="/register" className="cta-banner-btn">Create Your Free Account</Link>
         </div>
       </section>
 
@@ -479,6 +497,19 @@ export default function Landing() {
           </div>
         </div>
       </footer>
+
+      {/* Scroll to Top Button */}
+      {showScrollTop && (
+        <button
+          className="scroll-top-btn"
+          onClick={scrollToTop}
+          aria-label="Scroll to top"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M18 15l-6-6-6 6" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }
