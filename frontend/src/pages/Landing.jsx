@@ -342,7 +342,10 @@ export default function Landing() {
                     id="calc-weight"
                     type="number"
                     value={weight}
-                    onChange={(e) => setWeight(Math.max(1, parseInt(e.target.value) || 0))}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setWeight(val === '' ? '' : Math.max(1, parseInt(val) || 0));
+                    }}
                   />
                 </div>
                 <div className="calc-group">
@@ -351,7 +354,10 @@ export default function Landing() {
                     id="calc-height"
                     type="number"
                     value={height}
-                    onChange={(e) => setHeight(Math.max(1, parseInt(e.target.value) || 0))}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setHeight(val === '' ? '' : Math.max(1, parseInt(val) || 0));
+                    }}
                   />
                 </div>
                 <div className="calc-group">
@@ -360,7 +366,10 @@ export default function Landing() {
                     id="calc-age"
                     type="number"
                     value={age}
-                    onChange={(e) => setAge(Math.max(1, parseInt(e.target.value) || 0))}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setAge(val === '' ? '' : Math.max(1, parseInt(val) || 0));
+                    }}
                   />
                 </div>
               </div>
