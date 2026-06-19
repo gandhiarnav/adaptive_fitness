@@ -144,9 +144,9 @@ export default function Landing() {
             {/* Mockup Explanation */}
             <div className="mockup-explanation-card">
               <div className="explanation-text-block">
-                <h4>Interactive Dashboard Preview</h4>
+                <h4>Seamless Logging, Instant Feedback</h4>
                 <p>
-                  On the right, see our dashboard in action: it uses Gemini Flash to parse meal logs (like chicken biryani) instantly, visualizes daily macro rings, and tracks protein target progress.
+                  Describe your meals naturally—from complex home-cooked dishes to regional recipes. The system estimates calorie and protein counts instantly, updating your daily rings and macro bars in real time.
                 </p>
               </div>
             </div>
