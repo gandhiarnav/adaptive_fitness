@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { isLoggedIn } from './api/auth';
 import { isAdminLoggedIn } from './api/admin';
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -37,8 +38,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Root: redirect to dashboard (guard will redirect to login if needed) */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        {/* Root: Landing page (guarded to redirect to dashboard if already logged in) */}
+        <Route
+          path="/"
+          element={<PublicRoute><Landing /></PublicRoute>}
+        />
 
         {/* Public routes */}
         <Route
