@@ -1,17 +1,14 @@
-/* --- LANDING PAGE STYLING --- */
+/* --- RESTORED DARK GLASSMORPHIC AESTHETIC --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --color-primary: #a78bfa;
-  /* Neon Purple */
-  --color-secondary: #34d399;
-  /* Mint Green */
-  --color-accent: #fbbf24;
-  /* Amber Yellow */
+  --color-primary: #a78bfa;     /* Neon Purple */
+  --color-secondary: #34d399;   /* Mint Green */
+  --color-accent: #fbbf24;      /* Amber Yellow */
   --bg-dark: #0f0f1a;
   --bg-card: rgba(20, 20, 35, 0.55);
   --border-light: rgba(255, 255, 255, 0.08);
-  --text-dim: #94a3b8;
-  /* Slate 400 */
+  --text-dim: #94a3b8;          /* Slate 400 */
 }
 
 /* Container & layout reset */
@@ -19,7 +16,7 @@
   min-height: 100vh;
   background-color: var(--bg-dark);
   color: #ffffff;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   position: relative;
   overflow-x: hidden;
   padding-bottom: 2rem;
@@ -27,6 +24,7 @@
 
 /* Background Atmosphere Blobs */
 .glow-blob {
+  display: block;
   position: absolute;
   border-radius: 50%;
   filter: blur(130px);
@@ -158,7 +156,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
   gap: 4rem;
   position: relative;
   z-index: 10;
@@ -170,73 +167,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.hero-split-content {
-  display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: 4rem;
-  align-items: center;
-  width: 100%;
-}
-
-.hero-left-col {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-}
-
-.hero-right-col {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-}
-
-/* Mockup Explanation Card */
-.mockup-explanation-card {
-  display: flex;
-  gap: 1rem;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  padding: 1.25rem;
-  border-radius: 12px;
-  margin-bottom: 2.5rem;
-  max-width: 550px;
-  align-items: flex-start;
-  text-align: left;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.explanation-icon {
-  font-size: 1.35rem;
-  background: rgba(167, 139, 250, 0.08);
-  border: 1px solid rgba(167, 139, 250, 0.15);
-  border-radius: 8px;
-  width: 38px;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: var(--color-primary);
-}
-
-.explanation-text-block h4 {
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin-bottom: 0.35rem;
-  color: #ffffff;
-}
-
-.explanation-text-block p {
-  font-size: 0.85rem;
-  color: var(--text-dim);
-  line-height: 1.5;
-  margin: 0 !important;
 }
 
 .badge {
@@ -266,6 +196,21 @@
   -webkit-text-fill-color: transparent;
   display: inline-block;
   position: relative;
+}
+
+.hero-split-content {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 4rem;
+  align-items: center;
+  width: 100%;
+}
+
+.hero-left-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
 }
 
 .hero-description {
@@ -320,37 +265,57 @@
   transform: translateY(-2px);
 }
 
-.social-proof-mini {
+/* Mockup Explanation Card */
+.mockup-explanation-card {
   display: flex;
-  align-items: center;
   gap: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 2.5rem;
+  max-width: 550px;
+  align-items: flex-start;
+  text-align: left;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
-.avatar-group {
-  display: flex;
-}
-
-.avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #1e1e2f;
-  border: 2px solid var(--bg-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.explanation-text-block h4 {
   font-size: 0.95rem;
-  margin-right: -10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+  color: #ffffff;
 }
 
-.social-proof-mini p {
+.explanation-text-block p {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin: 0 !important;
+}
+
+.social-proof-mini {
+  border-top: 1px solid var(--border-light);
+  padding-top: 1.25rem;
+  width: 100%;
+}
+
+.editorial-footnote {
   font-size: 0.85rem;
   color: var(--text-dim);
   margin: 0;
 }
 
 /* --- APP MOCKUP (INTERACTIVE HERO WIDGET) --- */
+.hero-right-col {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
 .hero-mockup-container {
   display: flex;
   justify-content: center;
@@ -371,15 +336,8 @@
 }
 
 @keyframes floatMockup {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-12px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
 }
 
 .mockup-header {
@@ -456,7 +414,6 @@
   padding: 1rem;
 }
 
-/* Mini calorie ring layout */
 .progress-card {
   display: flex;
   align-items: center;
@@ -488,8 +445,7 @@
 .mockup-ring-svg circle.fg {
   stroke: var(--color-primary);
   stroke-dasharray: 251;
-  stroke-dashoffset: 65;
-  /* 74% filled */
+  stroke-dashoffset: 65; /* 74% filled */
   stroke-linecap: round;
 }
 
@@ -531,6 +487,10 @@
 
 .stat-line span {
   color: var(--text-dim);
+}
+
+.stat-line strong {
+  color: #ffffff;
 }
 
 /* Chat entry mockup */
@@ -978,6 +938,7 @@
 .macro-header strong {
   margin-left: auto;
   font-weight: 700;
+  color: #ffffff;
 }
 
 .macro-result-item .macro-track {
@@ -1067,7 +1028,7 @@
   color: #0f0f1a;
   background: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.25);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 

@@ -143,7 +143,6 @@ export default function Landing() {
 
             {/* Mockup Explanation */}
             <div className="mockup-explanation-card">
-              <div className="explanation-icon">📊</div>
               <div className="explanation-text-block">
                 <h4>Interactive Dashboard Preview</h4>
                 <p>
@@ -153,13 +152,7 @@ export default function Landing() {
             </div>
 
             <div className="social-proof-mini">
-              <div className="avatar-group">
-                <span className="avatar">🥑</span>
-                <span className="avatar">🏋️</span>
-                <span className="avatar">🤖</span>
-                <span className="avatar">📈</span>
-              </div>
-              <p>Join thousands of users tracking with artificial intelligence.</p>
+              <p className="editorial-footnote">Join thousands of users tracking with artificial intelligence.</p>
             </div>
           </div>
 
@@ -309,7 +302,7 @@ export default function Landing() {
               Get a preview of your custom daily calorie budget and target macros. Our widget uses the scientific Mifflin-St Jeor formula trusted by dieticians.
             </p>
             <p className="calculator-tip">
-              💡 <strong>Why register?</strong> Creating an account logs your profile parameters and adapts these macros as you log food and track workouts daily!
+              <strong>Why register?</strong> Creating an account logs your profile parameters and adapts these macros as you log food and track workouts daily!
             </p>
 
             <div className="calculator-cta-box">
