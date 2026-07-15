@@ -34,6 +34,10 @@ export default function Register() {
       className="auth-page" 
       style={{ backgroundImage: `url(${bgGym})` }}
     >
+      <Link to="/" className="auth-back-btn">
+        ← Back to Home
+      </Link>
+
       <div className="blob blob-1" />
       <div className="blob blob-2" />
 

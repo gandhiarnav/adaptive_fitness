@@ -42,6 +42,10 @@ export default function Login() {
       className="auth-page"
       style={{ backgroundImage: `url(${bgGym})` }}
     >
+      <Link to="/" className="auth-back-btn">
+        ← Back to Home
+      </Link>
+
       {/* Background blobs */}
       <div className="blob blob-1" />
       <div className="blob blob-2" />
