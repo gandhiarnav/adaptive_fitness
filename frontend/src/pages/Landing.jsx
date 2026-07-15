@@ -231,11 +231,11 @@ export default function Landing() {
                     <div className="mockup-card macro-grid">
                       <div className="mini-bar">
                         <div className="bar-header"><span>Protein</span><strong>45g / 140g</strong></div>
-                        <div className="bar-track"><div className="bar-fill" style={{ width: '32%', background: '#a78bfa' }} /></div>
+                        <div className="bar-track"><div className="bar-fill" style={{ width: '32%', background: 'var(--color-primary)' }} /></div>
                       </div>
                       <div className="mini-bar">
                         <div className="bar-header"><span>Carbs</span><strong>65g / 240g</strong></div>
-                        <div className="bar-track"><div className="bar-fill" style={{ width: '27%', background: '#34d399' }} /></div>
+                        <div className="bar-track"><div className="bar-fill" style={{ width: '27%', background: 'var(--color-secondary)' }} /></div>
                       </div>
                     </div>
                   </div>
@@ -259,7 +259,7 @@ export default function Landing() {
         <div className="features-grid">
           {/* Card 1: AI Estimator */}
           <div className="feature-card">
-            <div className="feature-icon-wrapper purple">
+            <div className="feature-icon-wrapper green">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12A10 10 0 0 1 12 2z" />
                 <path d="M12 6v12M6 12h12" />
@@ -276,7 +276,7 @@ export default function Landing() {
 
           {/* Card 2: Adaptive Macros */}
           <div className="feature-card">
-            <div className="feature-icon-wrapper green">
+            <div className="feature-icon-wrapper yellow">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M3 3v18h18" />
                 <path d="m18.7 8-5.1 5.2-2.8-2.7L7 14.3" />
@@ -293,7 +293,7 @@ export default function Landing() {
 
           {/* Card 3: Workout logs */}
           <div className="feature-card">
-            <div className="feature-icon-wrapper yellow">
+            <div className="feature-icon-wrapper red">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M6.5 6.5h11M6.5 12h11M6.5 17.5h11" />
                 <rect x="3" y="3" width="18" height="18" rx="2" />

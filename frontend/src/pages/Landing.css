@@ -2,9 +2,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --color-primary: #a78bfa;     /* Neon Purple */
-  --color-secondary: #34d399;   /* Mint Green */
-  --color-accent: #fbbf24;      /* Amber Yellow */
+  --color-primary: #10b981;     /* Emerald Green */
+  --color-primary-rgb: 16, 185, 129;
+  --color-primary-light: #d1fae5;
+  --color-secondary: #FDDA0D;   /* Cadmium Yellow */
+  --color-accent: #e30022;      /* Cadmium Red */
   --bg-dark: #0f0f1a;
   --bg-card: rgba(20, 20, 35, 0.55);
   --border-light: rgba(255, 255, 255, 0.08);
@@ -170,8 +172,8 @@
 }
 
 .badge {
-  background: rgba(167, 139, 250, 0.1);
-  border: 1px solid rgba(167, 139, 250, 0.2);
+  background: rgba(var(--color-primary-rgb), 0.1);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.2);
   color: var(--color-primary);
   padding: 0.4rem 0.9rem;
   border-radius: 20px;
@@ -527,9 +529,9 @@
 }
 
 .chat-bubble.ai {
-  background: rgba(167, 139, 250, 0.12);
-  color: #e9d5ff;
-  border: 1px solid rgba(167, 139, 250, 0.2);
+  background: rgba(var(--color-primary-rgb), 0.12);
+  color: var(--color-primary-light);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.2);
   align-self: flex-end;
   max-width: 90%;
   border-bottom-right-radius: 2px;
@@ -628,8 +630,8 @@
 
 .feature-card:hover {
   transform: translateY(-6px);
-  border-color: rgba(167, 139, 250, 0.3);
-  box-shadow: 0 15px 35px rgba(167, 139, 250, 0.08);
+  border-color: rgba(var(--color-primary-rgb), 0.3);
+  box-shadow: 0 15px 35px rgba(var(--color-primary-rgb), 0.08);
 }
 
 .feature-icon-wrapper {
@@ -642,18 +644,18 @@
   margin-bottom: 1.5rem;
 }
 
-.feature-icon-wrapper.purple {
-  background: rgba(167, 139, 250, 0.1);
+.feature-icon-wrapper.green {
+  background: rgba(var(--color-primary-rgb), 0.1);
   color: var(--color-primary);
 }
 
-.feature-icon-wrapper.green {
-  background: rgba(52, 211, 153, 0.1);
+.feature-icon-wrapper.yellow {
+  background: rgba(253, 218, 13, 0.1);
   color: var(--color-secondary);
 }
 
-.feature-icon-wrapper.yellow {
-  background: rgba(251, 191, 36, 0.1);
+.feature-icon-wrapper.red {
+  background: rgba(227, 0, 34, 0.15);
   color: var(--color-accent);
 }
 
@@ -756,18 +758,18 @@
   text-decoration: none;
   display: inline-block;
   padding: 0.8rem 1.75rem;
-  background: linear-gradient(135deg, var(--color-primary), #7c3aed);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
   color: #ffffff;
   font-weight: 600;
   font-size: 0.95rem;
   border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(167, 139, 250, 0.3);
+  box-shadow: 0 4px 15px rgba(var(--color-primary-rgb), 0.3);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-calc-register:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 22px rgba(167, 139, 250, 0.45);
+  box-shadow: 0 6px 22px rgba(var(--color-primary-rgb), 0.45);
 }
 
 /* Calculator Form Card */
@@ -860,8 +862,8 @@
 /* Calc Results Panel */
 .calc-results {
   margin-top: 0.5rem;
-  background: rgba(167, 139, 250, 0.04);
-  border: 1px solid rgba(167, 139, 250, 0.1);
+  background: rgba(var(--color-primary-rgb), 0.04);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.1);
   border-radius: 12px;
   padding: 1.5rem;
   display: flex;
@@ -891,7 +893,7 @@
   color: var(--color-primary);
   line-height: 1.2;
   margin: 0.2rem 0;
-  text-shadow: 0 0 20px rgba(167, 139, 250, 0.2);
+  text-shadow: 0 0 20px rgba(var(--color-primary-rgb), 0.2);
 }
 
 .results-calories .sub {
@@ -999,8 +1001,8 @@
   text-align: center;
   padding: 5rem 2rem;
   border-radius: 24px;
-  background: linear-gradient(135deg, rgba(167, 139, 250, 0.15) 0%, rgba(52, 211, 153, 0.05) 100%);
-  border: 1px solid rgba(167, 139, 250, 0.25);
+  background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.15) 0%, rgba(52, 211, 153, 0.05) 100%);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.25);
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
