@@ -1,5 +1,14 @@
 /* ── Login / Register shared page styles ─────────────────────────────────── */
 
+:root {
+  --primary-color: #10b981;       /* Vibrant Emerald Green */
+  --primary-hover: #34d399;       /* Bright Mint Green on hover */
+  --primary-dark: #047857;        /* Deep Forest Green for gradients/depth */
+  --primary-light: #a7f3d0;       /* Soft Sage Green highlight */
+  --primary-rgb: 16, 185, 129;    /* RGB value for transparent backgrounds */
+  --primary-text: #ffffff;        /* White text matches the deep green gradients perfectly */
+}
+
 .auth-page {
   min-height: 100vh;
   display: flex;
@@ -20,8 +29,8 @@
   content: '';
   position: absolute;
   inset: 0;
-  /* A more aesthetic, semi-transparent deep violet gradient */
-  background: linear-gradient(135deg, rgba(15, 15, 26, 0.4) 0%, rgba(46, 16, 101, 0.6) 100%);
+  /* Deep neutral dark to green-tinged gradient overlay to match theme */
+  background: linear-gradient(135deg, rgba(10, 10, 18, 0.6) 0%, rgba(10, 25, 15, 0.7) 100%);
   z-index: 1;
 }
 
@@ -37,7 +46,7 @@
 .blob-1 {
   width: 500px;
   height: 500px;
-  background: #7c3aed;
+  background: var(--primary-color);
   top: -150px;
   left: -150px;
   animation: drift 12s ease-in-out infinite alternate;
@@ -46,7 +55,7 @@
 .blob-2 {
   width: 400px;
   height: 400px;
-  background: #a78bfa;
+  background: var(--primary-hover);
   bottom: -100px;
   right: -100px;
   animation: drift 15s ease-in-out infinite alternate-reverse;
@@ -160,8 +169,8 @@
 }
 
 .field-input:focus {
-  border-color: #a78bfa;
-  background: rgba(167, 139, 250, 0.08);
+  border-color: var(--primary-color);
+  background: rgba(var(--primary-rgb), 0.08);
 }
 
 /* Error banner */
@@ -177,10 +186,10 @@
 /* Submit button */
 .auth-btn {
   padding: 0.85rem;
-  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
   border: none;
   border-radius: 0.75rem;
-  color: #fff;
+  color: var(--primary-text, #fff);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -226,7 +235,7 @@
 }
 
 .auth-link {
-  color: #a78bfa;
+  color: var(--primary-hover);
   font-weight: 500;
   text-decoration: none;
 }
