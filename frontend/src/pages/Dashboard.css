@@ -52,6 +52,63 @@
   backdrop-filter: blur(16px);
 }
 .dash-nav-brand { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.02em; }
+.dash-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+.dash-log-meal-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: #fff;
+  border-radius: 0.6rem;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Textured look using dual gradient background layers */
+  background-image: 
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.05) 0px,
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 1px,
+      transparent 4px
+    ),
+    linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+  
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+.dash-log-meal-btn:hover {
+  transform: translateY(-1.5px);
+  border-color: rgba(167, 139, 250, 0.7);
+  box-shadow: 
+    0 4px 12px rgba(124, 58, 237, 0.4),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  background-image: 
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.08) 0px,
+      rgba(255, 255, 255, 0.08) 1px,
+      transparent 1px,
+      transparent 4px
+    ),
+    linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+}
+.dash-log-meal-btn:active {
+  transform: translateY(0.5px);
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 1px rgba(0, 0, 0, 0.3);
+}
 .dash-logout-btn {
   padding: 0.45rem 1rem;
   background: rgba(255,255,255,0.06);

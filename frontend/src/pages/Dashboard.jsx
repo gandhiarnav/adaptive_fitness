@@ -189,9 +189,14 @@ export default function Dashboard() {
 
       {/* ── Navbar ─────────────────────────────────────────────────────── */}
       <nav className="dash-nav">
-        <div className="dash-nav-brand">
-          <img src={logo} alt="Adaptive Fitness" className="nav-logo" />
-          Adaptive Fitness
+        <div className="dash-nav-left">
+          <div className="dash-nav-brand">
+            <img src={logo} alt="Adaptive Fitness" className="nav-logo" />
+            Adaptive Fitness
+          </div>
+          <Link to="/journal" className="dash-log-meal-btn">
+            Log a Meal
+          </Link>
         </div>
         <button className="dash-logout-btn" onClick={handleLogout}>
           Sign Out
@@ -205,8 +210,7 @@ export default function Dashboard() {
 
         {/* ── Page tabs ─────────────────────────────────────────────────── */}
         <div className="dash-tabs">
-          <span className="dash-tab active">📊 Overview</span>
-          <Link to="/journal" className="dash-tab">📝 Log a Meal</Link>
+          <span className="dash-tab active">Overview</span>
         </div>
 
         {/* ── Calorie hero card ─────────────────────────────────────────── */}
