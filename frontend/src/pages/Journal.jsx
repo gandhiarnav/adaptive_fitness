@@ -17,9 +17,9 @@ const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Other'];
 
 const MEAL_ICONS = {
   Breakfast: '🌅',
-  Lunch:     '☀️',
-  Dinner:    '🌙',
-  Other:     '🍽️',
+  Lunch: '☀️',
+  Dinner: '🌙',
+  Other: '🍽️',
 };
 
 function parseMealType(rawText) {
@@ -58,8 +58,8 @@ function EntryList({ entries, onEdit, onDelete, deleteTarget, deleteStatus, dele
   return (
     <div className="entries-list">
       {entries.map((entry) => {
-        const mt         = parseMealType(entry.raw_text_entry);
-        const text       = parseContent(entry.raw_text_entry);
+        const mt = parseMealType(entry.raw_text_entry);
+        const text = parseContent(entry.raw_text_entry);
         const isDeleting = deleteTarget === entry.id;
 
         return (
@@ -147,32 +147,32 @@ export default function Journal() {
 
   // ── Log-form state ──────────────────────────────────────────────────────────
   const [mealType, setMealType] = useState('Other');
-  const [content,  setContent]  = useState('');
-  const [logStatus,  setLogStatus]  = useState(null);
+  const [content, setContent] = useState('');
+  const [logStatus, setLogStatus] = useState(null);
   const [logMessage, setLogMessage] = useState('');
 
   // ── Today's entries ─────────────────────────────────────────────────────────
-  const [todayEntries,  setTodayEntries]  = useState([]);
-  const [todayLoading,  setTodayLoading]  = useState(true);
-  const [todayError,    setTodayError]    = useState(null);
+  const [todayEntries, setTodayEntries] = useState([]);
+  const [todayLoading, setTodayLoading] = useState(true);
+  const [todayError, setTodayError] = useState(null);
 
   // ── History entries ─────────────────────────────────────────────────────────
-  const [historyEntries,  setHistoryEntries]  = useState([]);
-  const [historyLoading,  setHistoryLoading]  = useState(false);
-  const [historyError,    setHistoryError]    = useState(null);
-  const [historyLoaded,   setHistoryLoaded]   = useState(false); // lazy-load once
+  const [historyEntries, setHistoryEntries] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState(null);
+  const [historyLoaded, setHistoryLoaded] = useState(false); // lazy-load once
 
   // ── Shared delete state ─────────────────────────────────────────────────────
-  const [deleteTarget,  setDeleteTarget]  = useState(null);
-  const [deleteStatus,  setDeleteStatus]  = useState(null);
-  const [deleteErrMsg,  setDeleteErrMsg]  = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteStatus, setDeleteStatus] = useState(null);
+  const [deleteErrMsg, setDeleteErrMsg] = useState('');
 
   // ── Edit modal state ────────────────────────────────────────────────────────
-  const [editEntry,    setEditEntry]    = useState(null);
+  const [editEntry, setEditEntry] = useState(null);
   const [editMealType, setEditMealType] = useState('Other');
-  const [editContent,  setEditContent]  = useState('');
-  const [editStatus,   setEditStatus]   = useState(null);
-  const [editMessage,  setEditMessage]  = useState('');
+  const [editContent, setEditContent] = useState('');
+  const [editStatus, setEditStatus] = useState(null);
+  const [editMessage, setEditMessage] = useState('');
 
   // ── Data fetching ───────────────────────────────────────────────────────────
 
@@ -314,10 +314,10 @@ export default function Journal() {
     deleteTarget,
     deleteStatus,
     deleteErrMsg,
-    onDelete:        requestDelete,
-    onCancelDelete:  cancelDelete,
+    onDelete: requestDelete,
+    onCancelDelete: cancelDelete,
     onConfirmDelete: confirmDelete,
-    onEdit:          openEdit,
+    onEdit: openEdit,
   };
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -330,11 +330,13 @@ export default function Journal() {
       {/* Navbar */}
       <nav className="journal-nav">
         <div className="journal-nav-left">
-          <Link to="/dashboard" className="nav-back">← Dashboard</Link>
-          <span className="journal-nav-brand">
+          <div className="journal-nav-brand">
             <img src={logo} alt="Adaptive Fitness" className="nav-logo" />
             Adaptive Fitness
-          </span>
+          </div>
+          <Link to="/dashboard" className="journal-back-btn">
+            ← Dashboard
+          </Link>
         </div>
         <button className="journal-logout-btn" onClick={handleLogout}>Sign Out</button>
       </nav>
@@ -356,7 +358,7 @@ export default function Journal() {
             onClick={() => setActiveTab('today')}
             id="tab-today"
           >
-            <span className="tab-icon">📅</span>
+            <span className="tab-icon"></span>
             Today
           </button>
           <button
@@ -366,7 +368,7 @@ export default function Journal() {
             onClick={() => setActiveTab('history')}
             id="tab-history"
           >
-            <span className="tab-icon">🗂️</span>
+            <span className="tab-icon"></span>
             History
           </button>
         </div>

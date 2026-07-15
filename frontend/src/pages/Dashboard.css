@@ -69,8 +69,10 @@
 .dash-log-meal-btn {
   display: inline-flex;
   align-items: center;
-  padding: 0.45rem 1.1rem;
-  font-size: 0.85rem;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 0.55rem 1.25rem;
+  font-size: 0.9rem;
   font-weight: 600;
   text-decoration: none;
   color: var(--primary-text, #fff);
@@ -119,12 +121,17 @@
     inset 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 .dash-logout-btn {
-  padding: 0.45rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 0.55rem 1.25rem;
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 0.6rem;
   color: rgba(255,255,255,0.65);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }
