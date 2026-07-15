@@ -70,7 +70,7 @@ function CalorieRing({ consumed, target }) {
         />
         {/* Progress */}
         <circle
-          stroke={isOver ? '#ff6b6b' : '#a78bfa'}
+          stroke={isOver ? '#ff6b6b' : 'var(--primary-color)'}
           fill="transparent"
           strokeWidth={stroke}
           strokeDasharray={`${circumference} ${circumference}`}
@@ -248,19 +248,19 @@ export default function Dashboard() {
             label="Protein"
             consumed={summary.protein_consumed}
             target={summary.target_protein}
-            color="linear-gradient(90deg, #a78bfa, #7c3aed)"
+            color="linear-gradient(90deg, var(--primary-light), var(--primary-color))"
           />
           <MacroBar
             label="Carbs"
             consumed={0}
             target={summary.target_carbs}
-            color="linear-gradient(90deg, #34d399, #059669)"
+            color="linear-gradient(90deg, #FEF08A, #FDDA0D)"
           />
           <MacroBar
             label="Fat"
             consumed={0}
             target={summary.target_fat}
-            color="linear-gradient(90deg, #fbbf24, #d97706)"
+            color="linear-gradient(90deg, #ffccd3, #e30022)"
           />
           <p className="macro-note">
             * Carbs and fat tracking coming soon — log your meals to see protein.
