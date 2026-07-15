@@ -12,7 +12,7 @@ starlette==0.52.1               # fastapi's underlying ASGI framework (pinned fo
 # ── Database ──────────────────────────────────────────────────────────────────
 SQLAlchemy==2.0.47
 alembic==1.18.4
-psycopg2-binary==2.9.10         # PostgreSQL driver for production on Render (Linux binary wheel)
+psycopg2-binary==2.9.12         # PostgreSQL driver for production on Render (Linux binary wheel)
 
 # ── Data Validation ───────────────────────────────────────────────────────────
 pydantic==2.12.5
