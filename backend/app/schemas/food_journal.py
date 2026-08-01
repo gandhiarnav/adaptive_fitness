@@ -16,10 +16,27 @@ class FoodJournalBase(BaseModel):
         return v.strip()
 
 
-# ── Incoming: what the client sends ───────────────────────────────────────────
-# The client sends raw text; the AI service layer will fill in the macro estimates.
+# ── Incoming: AI-mode (text → estimator) ───────────────────────────────────────
 class FoodJournalCreate(FoodJournalBase):
+    """Client sends raw text; the AI service layer will fill in the macro estimates."""
     pass
+
+
+# ── Incoming: Manual-mode (user supplies macros directly) ─────────────────────
+class FoodJournalManualCreate(FoodJournalBase):
+    """
+    Client explicitly provides calorie and protein values.
+    The AI estimator is skipped entirely for this path.
+    """
+    manual_calories: float
+    manual_protein: float
+
+    @field_validator("manual_calories", "manual_protein")
+    @classmethod
+    def value_must_be_non_negative(cls, v: float) -> float:
+        if v < 0:
+            raise ValueError("Nutritional values cannot be negative.")
+        return v
 
 
 # ── Update: what the client sends for PATCH ────────────────────────────────────
@@ -35,12 +52,13 @@ class FoodJournalUpdate(BaseModel):
         return v.strip() if v is not None else v
 
 
-# ── Outgoing: includes the AI-estimated fields the client never sends ──────────
+# ── Outgoing: includes the AI-estimated (or manual) fields ────────────────────
 class FoodJournalResponse(FoodJournalBase):
     id: int
     user_id: int
-    estimated_calories: int | None = None
-    estimated_protein: int | None = None
+    is_manual: bool = False
+    estimated_calories: float | None = None   # Float for decimal support
+    estimated_protein: float | None = None    # Float for decimal support
     created_at: datetime
 
     model_config = {"from_attributes": True}

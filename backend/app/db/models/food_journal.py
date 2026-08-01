@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Date, DateTime
+from sqlalchemy import Column, Boolean, Integer, Float, String, ForeignKey, Date, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.base import Base
@@ -11,8 +11,9 @@ class FoodJournal(Base):
     
     date = Column(Date, nullable=False)
     raw_text_entry = Column(String, nullable=False) # e.g., "Ate an apple and 2 eggs"
-    estimated_calories = Column(Integer)
-    estimated_protein = Column(Integer)
+    is_manual = Column(Boolean, default=False, nullable=False, server_default="0")
+    estimated_calories = Column(Float)   # kcal — Float supports decimals
+    estimated_protein = Column(Float)    # grams — Float supports decimals
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

@@ -13,8 +13,13 @@ from app.crud.food_journal import (
     update_food_entry,
 )
 from app.db.models.user import User
-from app.schemas.food_journal import FoodJournalCreate, FoodJournalUpdate, FoodJournalResponse
-from app.services.calorie_estimator import estimate_macros  # ← Milestone 5 wired in
+from app.schemas.food_journal import (
+    FoodJournalCreate,
+    FoodJournalManualCreate,
+    FoodJournalUpdate,
+    FoodJournalResponse,
+)
+from app.services.calorie_estimator import estimate_macros
 
 router = APIRouter(prefix="/journal", tags=["Food Journal"])
 
@@ -26,21 +31,50 @@ def log_food(
     db: Session = Depends(get_db),
 ):
     """
-    Log a new food entry.
+    Log a new food entry via AI text estimation.
 
     The raw text is passed through the calorie estimator service before
     being saved. If the estimator returns 0/0 (no known foods found),
     the entry is still saved — just without macro estimates.
     """
-    # ── Service layer call ────────────────────────────────────────────────────
     estimate = estimate_macros(entry_in.raw_text_entry)
 
     return create_food_entry(
         db,
         entry_in=entry_in,
         user_id=current_user.id,
-        estimated_calories=estimate.calories or None,  # store None instead of 0
+        estimated_calories=estimate.calories or None,
         estimated_protein=estimate.protein or None,
+        is_manual=False,
+    )
+
+
+@router.post("/manual", response_model=FoodJournalResponse, status_code=status.HTTP_201_CREATED)
+def log_food_manual(
+    entry_in: FoodJournalManualCreate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Log a food/meal entry with user-supplied macro values.
+
+    The AI estimator is bypassed entirely — the provided calories and
+    protein are stored directly in the estimated_* columns so the rest
+    of the app (dashboard summaries, charts) works without any changes.
+    """
+    # Re-use FoodJournalCreate for the CRUD layer (same fields minus manual_*)
+    base_entry = FoodJournalCreate(
+        date=entry_in.date,
+        raw_text_entry=entry_in.raw_text_entry,
+    )
+
+    return create_food_entry(
+        db,
+        entry_in=base_entry,
+        user_id=current_user.id,
+        estimated_calories=entry_in.manual_calories or None,
+        estimated_protein=entry_in.manual_protein or None,
+        is_manual=True,
     )
 
 
@@ -108,6 +142,8 @@ def update_food_entry_route(
     Ownership is enforced — users can only edit their own entries.
     When raw_text_entry changes the calorie estimator is re-run so
     the macro estimates stay consistent with the new text.
+    Manual entries are re-estimated when text changes (user can use
+    the manual endpoint to update macros instead).
     """
     entry = get_entry_by_id(db, entry_id=entry_id, user_id=current_user.id)
     if entry is None:
@@ -119,8 +155,8 @@ def update_food_entry_route(
     estimated_calories = entry.estimated_calories
     estimated_protein = entry.estimated_protein
 
-    # Re-run the AI estimator only when the text actually changed.
-    if update_in.raw_text_entry is not None:
+    # Re-run the AI estimator only when the text actually changed and entry is not manual.
+    if update_in.raw_text_entry is not None and not entry.is_manual:
         estimate = estimate_macros(update_in.raw_text_entry)
         estimated_calories = estimate.calories or None
         estimated_protein = estimate.protein or None

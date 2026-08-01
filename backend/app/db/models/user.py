@@ -19,3 +19,4 @@ class User(Base):
     profile      = relationship("Profile",      back_populates="user", uselist=False, cascade="all, delete-orphan")
     food_journal = relationship("FoodJournal",  back_populates="user", cascade="all, delete-orphan")
     workout_logs = relationship("WorkoutLog",   back_populates="user", cascade="all, delete-orphan")
+    saved_meals  = relationship("SavedMeal",    back_populates="user", cascade="all, delete-orphan")

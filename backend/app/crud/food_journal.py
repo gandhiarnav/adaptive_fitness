@@ -10,20 +10,21 @@ def create_food_entry(
     db: Session,
     entry_in: FoodJournalCreate,
     user_id: int,
-    estimated_calories: int | None = None,
-    estimated_protein: int | None = None,
+    estimated_calories: float | None = None,
+    estimated_protein: float | None = None,
+    is_manual: bool = False,
 ) -> FoodJournal:
     """
     Create a new food journal entry.
 
-    estimated_calories and estimated_protein are optional here because
-    in Milestone 5 the calorie_estimator service will compute them and
-    pass them in. For now, entries can be saved without estimates.
+    When is_manual=True the caller supplies the macro values directly and
+    the AI estimator has already been skipped at the route level.
     """
     db_entry = FoodJournal(
         user_id=user_id,
         date=entry_in.date,
         raw_text_entry=entry_in.raw_text_entry,
+        is_manual=is_manual,
         estimated_calories=estimated_calories,
         estimated_protein=estimated_protein,
     )
@@ -95,8 +96,8 @@ def update_food_entry(
     db: Session,
     db_entry: FoodJournal,
     update_in: FoodJournalUpdate,
-    estimated_calories: int | None = None,
-    estimated_protein: int | None = None,
+    estimated_calories: float | None = None,
+    estimated_protein: float | None = None,
 ) -> FoodJournal:
     """
     Apply a partial update to an existing food journal entry.

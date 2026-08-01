@@ -39,6 +39,36 @@ export async function logMeal(mealType, content, date) {
 }
 
 /**
+ * Submit a new food journal entry with manually-provided macro values.
+ * The AI estimator is bypassed entirely on the backend.
+ *
+ * @param {string} mealType  - "Breakfast" | "Lunch" | "Dinner" | "Other"
+ * @param {string} name      - food or meal name
+ * @param {number} calories  - kcal (decimal allowed)
+ * @param {number} protein   - grams (decimal allowed)
+ * @param {string} [date]    - ISO date string, defaults to today
+ */
+export async function logManualMeal(mealType, name, calories, protein, date) {
+  const localDate = new Date();
+  const year = localDate.getFullYear();
+  const month = String(localDate.getMonth() + 1).padStart(2, '0');
+  const day = String(localDate.getDate()).padStart(2, '0');
+  const today = `${year}-${month}-${day}`;
+
+  const raw_text_entry =
+    mealType === 'Other'
+      ? name.trim()
+      : `${mealType}: ${name.trim()}`;
+
+  return apiClient.post('/journal/manual', {
+    date: date ?? today,
+    raw_text_entry,
+    manual_calories: calories,
+    manual_protein: protein,
+  });
+}
+
+/**
  * Fetch all journal entries for the current user (newest first).
  * @returns {Promise<Array>}
  */

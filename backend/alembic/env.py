@@ -19,6 +19,7 @@ from app.db.models.user import User
 from app.db.models.profile import Profile
 from app.db.models.food_journal import FoodJournal
 from app.db.models.workout_log import WorkoutLog
+from app.db.models.saved_meal import SavedMeal
 
 # 4. Config setup
 config = context.config
