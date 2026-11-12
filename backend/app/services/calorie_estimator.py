@@ -331,22 +331,57 @@ Rules:
 """
 
 
+_GEMINI_MODELS = (
+    "gemini-3.5-flash-lite",
+    "gemini-flash-lite-latest",
+    "gemini-3.1-flash-lite",
+    "gemma-4-26b-a4b-it",
+)
+
+
 def _gemini_estimate(raw_text: str, api_key: str) -> MacroEstimate:
     """
-    Call the Gemini API to estimate calories and protein from free text.
+    Call the Gemini REST API to estimate calories and protein from free text.
 
     Raises any exception on failure — the caller handles fallback.
     """
-    import google.generativeai as genai
+    import urllib.request
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(
-        model_name="gemini-2.0-flash",
-        system_instruction=_GEMINI_SYSTEM_PROMPT,
-    )
+    prompt = f"{_GEMINI_SYSTEM_PROMPT}\n\nFood description: {raw_text}"
+    payload = json.dumps({
+        "contents": [
+            {"role": "user", "parts": [{"text": prompt}]},
+        ],
+    }).encode("utf-8")
 
-    response = model.generate_content(raw_text)
-    response_text = response.text.strip()
+    last_err: Exception | None = None
+    response_text = ""
+
+    for model_name in _GEMINI_MODELS:
+        url = (
+            f"https://generativelanguage.googleapis.com/v1beta/models/"
+            f"{model_name}:generateContent?key={api_key}"
+        )
+        req = urllib.request.Request(
+            url,
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                body = json.loads(resp.read().decode("utf-8"))
+                response_text = (
+                    body["candidates"][0]["content"]["parts"][0]["text"].strip()
+                )
+                break
+        except Exception as exc:
+            last_err = exc
+            continue
+    else:
+        if last_err is not None:
+            raise last_err
+        raise RuntimeError("No Gemini models configured")
 
     # Strip markdown code fences if the model wraps output despite instructions
     if response_text.startswith("```"):

@@ -19,6 +19,8 @@ services:
         sync: false           # Set in Render dashboard — never commit the real value
       - key: DATABASE_URL
         sync: false           # Set in Render dashboard — PostgreSQL connection string
+      - key: GEMINI_API_KEY
+        sync: false           # Set in Render dashboard — Gemini API key for nutrition parsing
       - key: ALGORITHM
         value: HS256
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
