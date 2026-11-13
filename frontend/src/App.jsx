@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { isLoggedIn } from './api/auth';
 import { isAdminLoggedIn } from './api/admin';
 import Landing from './pages/Landing';
@@ -19,19 +19,25 @@ function PrivateRoute({ children }) {
 
 /**
  * PublicRoute — prevents logged-in users from seeing login/register again.
- * If already authenticated, redirect straight to the dashboard.
+ * Allows ?mode=admin on /login even when a regular user session is active,
+ * since admin and user tokens are stored separately.
  */
 function PublicRoute({ children }) {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  if (params.get('mode') === 'admin') {
+    return isAdminLoggedIn() ? <Navigate to="/admin" replace /> : children;
+  }
   return isLoggedIn() ? <Navigate to="/dashboard" replace /> : children;
 }
 
 /**
  * AdminRoute — protects /admin.
  * Checks the ADMIN token (af_admin_token), not the regular user token.
- * If no admin token, redirect to /login.
+ * If no admin token, redirect to /login?mode=admin.
  */
 function AdminRoute({ children }) {
-  return isAdminLoggedIn() ? children : <Navigate to="/login" replace />;
+  return isAdminLoggedIn() ? children : <Navigate to="/login?mode=admin" replace />;
 }
 
 export default function App() {

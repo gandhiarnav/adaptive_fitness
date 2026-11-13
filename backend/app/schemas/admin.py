@@ -59,8 +59,8 @@ class AdminFoodJournalEntry(BaseModel):
     user_email: str
     date: str          # ISO date string
     raw_text_entry: str
-    estimated_calories: Optional[int] = None
-    estimated_protein: Optional[int] = None
+    estimated_calories: Optional[float] = None
+    estimated_protein: Optional[float] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

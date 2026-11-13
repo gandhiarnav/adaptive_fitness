@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { login } from '../api/auth';
 import { adminLogin } from '../api/admin';
 import logo from '../assets/logo.png';
@@ -8,8 +8,9 @@ import './Login.css';
 
 export default function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const [mode, setMode]         = useState('user');   // 'user' | 'admin'
+  const [mode, setMode]         = useState(() => searchParams.get('mode') === 'admin' ? 'admin' : 'user');   // 'user' | 'admin'
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [error, setError]       = useState('');
