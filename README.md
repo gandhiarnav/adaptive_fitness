@@ -19,15 +19,15 @@ This project is organized as a full-stack monorepo.
 
 **Backend (API)**
 - **Framework:** FastAPI
-- **Database:** SQLite (Development) → PostgreSQL (Production)
+- **Database:** PostgreSQL (hosted on [Neon](https://neon.tech) for both development & production)
 - **ORM:** SQLAlchemy
 - **Migrations:** Alembic
 - **Security:** Passlib (bcrypt), python-jose (JWT)
 - **Data Validation:** Pydantic
-- **AI Integration:** Google Gemini (`gemini-2.0-flash`) for calorie/protein estimation
+- **AI Integration:** Google Gemini REST API (`gemini-3.5-flash-lite` / `gemini-flash-lite-latest`) for calorie/protein estimation
 
 **Deployment**
-- **Platform:** Render (Blueprint via `render.yaml`)
+- **Platform:** Render (Blueprint via `render.yaml`) + Neon Serverless PostgreSQL
 - **Backend:** Web Service (Python/Uvicorn)
 - **Frontend:** Static Site (Vite build → `dist/`)
 - **Custom Domain:** `fit.alphazero.dev` (frontend) / backend via `.onrender.com` while DNS propagates
@@ -39,8 +39,9 @@ This project is organized as a full-stack monorepo.
 - **Secure Authentication:** Complete JWT-based login and registration system with bcrypt-hashed passwords and configurable token lifetime.
 - **Role-Based Access Control:** `is_admin` and `is_active` flags on the User model, enforced via layered auth dependencies (`get_current_user` → `get_current_active_user` → `get_current_admin`).
 - **Intelligent Macro Logic:** Dynamic TDEE and macro target calculations based on user profile and fitness goals (weight loss, muscle gain, maintenance, endurance).
-- **Categorized Food Journal:** Log meals with natural language descriptions. Full CRUD: create, list (paginated), filter by date, edit, and delete entries.
-- **AI-Powered Calorie Estimator:** Primary path uses **Gemini 2.0 Flash** to handle any food description — Indian dishes, brand names, mixed meals, informal language. Automatically falls back to a built-in keyword-based estimator if the API key is absent or Gemini fails, so the app never crashes.
+- **Categorized Food Journal & Manual Entry:** Log meals with natural language descriptions or manual calorie/protein values (with decimal precision). Full CRUD: create, list (paginated), filter by date, edit, and delete entries.
+- **Saved Meals Presets:** Save frequently eaten meals with custom calories and protein for instant one-click logging into the daily journal.
+- **AI-Powered Calorie Estimator:** Primary path uses **Gemini Flash-Lite (`gemini-3.5-flash-lite` / `gemini-flash-lite-latest`)** over the Gemini REST API to handle any food description — Indian dishes, brand names, mixed meals, informal language. Automatically falls back to a built-in keyword-based estimator if the API key is absent or Gemini fails, so the app never crashes.
 - **Workout Log:** Full CRUD for workout sessions — exercise, sets, reps, weight — with date filtering and pagination.
 - **Unified Dashboard:** Real-time summary of daily targets vs. consumed calories & protein, and remaining budget.
 - **Profile Management:** Create and update personal metrics (weight, height, age, goal, activity level) that drive all macro calculations.
@@ -70,7 +71,8 @@ adaptive_fitness/
 │   │   ├── script.py.mako
 │   │   └── versions/
 │   │       ├── 4f785ad59b77_initial_schema_generation.py
-│   │       └── 66a9048092d9_add_is_admin_to_users.py
+│   │       ├── 66a9048092d9_add_is_admin_to_users.py
+│   │       └── a1b2c3d4e5f6_add_saved_meals_and_manual_journal_columns.py
 │   ├── alembic.ini
 │   ├── requirements.txt
 │   ├── .env.example              # Template for required environment variables
@@ -86,7 +88,8 @@ adaptive_fitness/
 │       │       ├── auth.py       # POST /auth/register, POST /auth/login
 │       │       ├── users.py      # GET /users/me
 │       │       ├── profile.py    # GET/POST/PUT /profile
-│       │       ├── food_journal.py # GET/POST/PATCH/DELETE /journal (+ by-date, pagination)
+│       │       ├── food_journal.py # GET/POST/PATCH/DELETE /journal (+ by-date, pagination, manual macros)
+│       │       ├── saved_meals.py  # GET/POST/DELETE /saved-meals (user meal presets)
 │       │       ├── workout.py    # GET/POST/PATCH/DELETE /workout (+ by-date, pagination)
 │       │       ├── summary.py    # GET /summary/today (unified daily dashboard payload)
 │       │       └── admin.py      # GET/PATCH/DELETE /admin/* (admin-only)
@@ -99,6 +102,7 @@ adaptive_fitness/
 │       │   ├── user.py           # get_all_users, get_user_by_id, toggle_user_active, delete_user_by_id
 │       │   ├── profile.py
 │       │   ├── food_journal.py   # create, get (all/by-date), get_by_id, update, delete
+│       │   ├── saved_meal.py     # create, get_by_user, get_by_id, delete
 │       │   └── workout_log.py    # create, get (all/by-date), get_by_id, update, delete
 │       │
 │       ├── db/                   # SQLAlchemy engine & ORM models
@@ -108,6 +112,7 @@ adaptive_fitness/
 │       │       ├── user.py       # User (id, email, hashed_password, is_active, is_admin, created_at)
 │       │       ├── profile.py
 │       │       ├── food_journal.py
+│       │       ├── saved_meal.py
 │       │       └── workout_log.py
 │       │
 │       ├── schemas/              # Pydantic request/response models
@@ -115,12 +120,13 @@ adaptive_fitness/
 │       │   ├── user.py
 │       │   ├── profile.py
 │       │   ├── food_journal.py   # FoodJournalCreate, FoodJournalUpdate, FoodJournalResponse
+│       │   ├── saved_meal.py     # SavedMealCreate, SavedMealResponse
 │       │   ├── workout_log.py    # WorkoutLogCreate, WorkoutLogUpdate, WorkoutLogResponse
 │       │   ├── summary.py        # DailySummaryResponse
 │       │   └── admin.py          # AdminUserResponse, AdminStatsResponse, AdminFoodJournalEntry, AdminWorkoutEntry
 │       │
 │       └── services/             # Isolated business logic
-│           ├── calorie_estimator.py  # Gemini AI primary path + keyword-based fallback
+│           ├── calorie_estimator.py  # Gemini Flash-Lite REST primary path + keyword-based fallback
 │           └── macro_logic.py        # TDEE & macro target calculations
 │
 └── frontend/                     # React + Vite Application
@@ -137,10 +143,11 @@ adaptive_fitness/
         ├── App.css
         │
         ├── api/                  # Backend API client modules
-        │   ├── client.js         # Axios instance with JWT interceptors & refresh
+        │   ├── client.js         # Fetch wrapper with JWT headers & centralised error handling
         │   ├── auth.js           # register(), login(), isLoggedIn()
         │   ├── profile.js        # getProfile(), updateProfile()
         │   ├── journal.js        # getJournal(), addEntry(), deleteEntry()
+        │   ├── savedMeals.js     # getSavedMeals(), createSavedMeal(), deleteSavedMeal()
         │   └── admin.js          # adminLogin(), adminLogout(), fetchAdminStats(),
         │                         #   fetchAllUsers(), toggleUserActive(), deleteUser(),
         │                         #   fetchAllFoodJournal(), fetchAllWorkouts()
@@ -190,10 +197,11 @@ get_current_user → get_current_active_user → get_current_admin
 
 The calorie estimator (`services/calorie_estimator.py`) uses a **two-path approach**:
 
-**Primary: Gemini 2.0 Flash**
+**Primary: Gemini Flash-Lite (REST API)**
 - Called when `GEMINI_API_KEY` is set
+- Queries Google's `generativelanguage` REST endpoint using `gemini-3.5-flash-lite` / `gemini-flash-lite-latest` with an 8-second timeout
 - Handles any free-text food description in any language or format
-- Returns `{"calories": <int>, "protein": <int>}` via a strict JSON system prompt
+- Returns `{"calories": <int>, "protein": <int>}` via a strict JSON prompt
 - Strips markdown code fences from the response if the model includes them
 
 **Fallback: Keyword Parser**
@@ -220,9 +228,12 @@ All routes are prefixed with `/api/v1`.
 | `PUT` | `/profile` | User | Update profile |
 | `GET` | `/journal` | User | List entries (paginated) |
 | `GET` | `/journal/by-date` | User | Entries for a specific date |
-| `POST` | `/journal` | User | Log a new food entry (AI-estimated) |
-| `PATCH` | `/journal/{id}` | User | Edit entry (re-runs AI estimator) |
+| `POST` | `/journal` | User | Log a new food entry (AI-estimated or manual macros) |
+| `PATCH` | `/journal/{id}` | User | Edit entry (re-runs AI estimator or updates manual values) |
 | `DELETE` | `/journal/{id}` | User | Delete a food entry |
+| `GET` | `/saved-meals` | User | List user's saved meal presets |
+| `POST` | `/saved-meals` | User | Create a new saved meal preset |
+| `DELETE` | `/saved-meals/{id}` | User | Delete a saved meal preset |
 | `GET` | `/workout` | User | List workout entries (paginated) |
 | `GET` | `/workout/by-date` | User | Workouts for a specific date |
 | `POST` | `/workout` | User | Log a new workout |
@@ -248,13 +259,13 @@ You will need two terminal windows — one for the backend and one for the front
 ### 1. Backend (FastAPI)
 
 ```bash
-# From the project root — create and activate virtual environment
+# From the backend directory — create and activate virtual environment
+cd backend
 python -m venv venv
 venv\Scripts\activate        # Windows
 # source venv/bin/activate   # macOS/Linux
 
 # Install dependencies
-cd backend
 pip install -r requirements.txt
 
 # Copy environment template and fill in your values
@@ -264,7 +275,7 @@ cp .env.example .env
 alembic upgrade head
 
 # (Optional) Seed the admin account
-py seed_admin.py
+python seed_admin.py
 
 # Start the development server
 uvicorn app.main:app --reload
@@ -279,9 +290,9 @@ Interactive docs: **http://127.0.0.1:8000/docs**
 # Open a second terminal from the project root
 cd frontend
 
-# Copy environment template and set your local API URL
+# (Optional) Copy environment template if overriding Vite's local /api proxy
 cp .env.example .env
-# VITE_API_URL=http://127.0.0.1:8000
+# VITE_API_URL=http://localhost:8000
 
 # Install dependencies (first time only)
 npm install
@@ -300,12 +311,12 @@ React app available at: **http://localhost:5173**
 
 | Variable | Description |
 |---|---|
-| `DATABASE_URL` | SQLAlchemy connection string (SQLite for local, PostgreSQL for prod) |
+| `DATABASE_URL` | SQLAlchemy PostgreSQL connection string (e.g. Neon `postgresql://...?sslmode=require`) |
 | `SECRET_KEY` | Random secret for JWT signing — `python -c "import secrets; print(secrets.token_hex(32))"` |
 | `ALGORITHM` | JWT algorithm — default `HS256` |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Token lifetime in minutes — default `30` (prod uses `1440`) |
 | `ALLOWED_ORIGINS` | Comma-separated list of allowed CORS origins |
-| `GEMINI_API_KEY` | Google Gemini API key for AI calorie estimation. Get one at [aistudio.google.com](https://aistudio.google.com/app/apikey). Leave blank to use the keyword fallback. |
+| `GEMINI_API_KEY` | Google Gemini API key for AI calorie estimation. Leave blank to use the keyword fallback. |
 
 ### Frontend (`frontend/.env`)
 
@@ -315,9 +326,9 @@ React app available at: **http://localhost:5173**
 
 ---
 
-## 🚀 Production Deployment (Render)
+## 🚀 Production Deployment (Render + Neon)
 
-The project ships with a `render.yaml` Blueprint for one-click deployment on [Render](https://render.com).
+The project ships with a `render.yaml` Blueprint for deployment on [Render](https://render.com), backed by [Neon](https://neon.tech) Serverless PostgreSQL.
 
 > ✅ **The app is live at [fit.alphazero.dev](https://fit.alphazero.dev)**
 
@@ -330,21 +341,21 @@ The project ships with a `render.yaml` Blueprint for one-click deployment on [Re
 
 ### Steps
 
-1. **Create a PostgreSQL database** on Render and copy the Internal Database URL.
+1. **Create a PostgreSQL database** on [Neon.tech](https://neon.tech) and copy the `postgresql://` connection string.
 2. **Connect your GitHub repo** to Render and select the Blueprint from `render.yaml`.
 3. **Set secret environment variables** in the Render dashboard (never commit these):
    - `SECRET_KEY` — generate with `openssl rand -hex 32`
-   - `DATABASE_URL` — your Render PostgreSQL internal URL
+   - `DATABASE_URL` — your Neon PostgreSQL connection string
+   - `GEMINI_API_KEY` — your Google Gemini API key (optional but recommended)
    - `ALLOWED_ORIGINS` — your frontend's public URL (e.g. `https://fit.alphazero.dev`)
    - `VITE_API_URL` — your backend's public URL (e.g. `https://adaptive-fitness-api.onrender.com`)
-   - `GEMINI_API_KEY` — your Google Gemini API key (optional but recommended)
-4. **Run migrations** via the Render shell on the backend service:
+4. **Run migrations** locally (pointing `.env` at Neon) or via the Render shell:
    ```bash
    alembic upgrade head
    ```
-5. **Seed the admin account** via the Render shell:
+5. **(Optional) Seed the admin account:**
    ```bash
-   py seed_admin.py
+   python seed_admin.py
    ```
 6. **Deploy** — Render will build and serve both services automatically.
 
@@ -356,7 +367,8 @@ The project ships with a `render.yaml` Blueprint for one-click deployment on [Re
 
 | Migration | Description |
 |---|---|
-| `4f785ad59b77` | Initial schema — `users`, `profiles`, `food_journal`, `workout_log` tables |
+| `4f785ad59b77` | Initial schema — `users`, `profiles`, `food_journal`, `workout_logs` tables |
 | `66a9048092d9` | Added `is_admin` column to `users` table |
+| `a1b2c3d4e5f6` | Created `saved_meals` table, added `is_manual` flag to `food_journal`, and upgraded calorie/protein columns to `Float` |
 
 Run `alembic upgrade head` to apply all pending migrations.
